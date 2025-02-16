@@ -66,7 +66,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
           if (aiResponse.toolCall) {
             if (aiResponse.toolCall.name === 'buyInsurance') {
               const amount = aiResponse.toolCall.arguments[0]
-              window.alert(`Would you like to purchase coverage for $${amount}?`)
+              window.alert(`Processing home insurance coverage for $${amount}...`)
             }
           }
         } catch (error) {
