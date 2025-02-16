@@ -9,8 +9,9 @@ export interface ChatList {
 }
 
 export function ChatList({ messages, isLoading }: ChatList) {
-  // Show loading state even when there are no messages
-  if (isLoading && !messages.length) {
+  console.log('ChatList render:', { messages: messages.length, isLoading })
+  
+  if (!messages.length && isLoading) {
     return (
       <div className="relative mx-auto max-w-2xl px-4">
         <ChatMessageLoading />
@@ -27,12 +28,17 @@ export function ChatList({ messages, isLoading }: ChatList) {
       {messages.map((message, index) => (
         <div key={index}>
           <ChatMessage message={message} />
-          {(index < messages.length - 1 || isLoading) && (
+          {index < messages.length - 1 && (
             <Separator className="my-4 md:my-8" />
           )}
         </div>
       ))}
-      {isLoading && <ChatMessageLoading />}
+      {isLoading && (
+        <>
+          <Separator className="my-4 md:my-8" />
+          <ChatMessageLoading />
+        </>
+      )}
     </div>
   )
 }

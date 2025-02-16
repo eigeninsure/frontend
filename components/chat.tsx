@@ -349,111 +349,30 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       },
       onError: (error) => {
         toast.error(error.message)
-      },
-      async onFinish(message) {
-        try {
-          // Parse the message content as JSON
-          const aiResponse: AIResponse = JSON.parse(message.content)
-
-          // Handle tool calls.
-          if (aiResponse.toolCall) {
-            if (aiResponse.toolCall.name === 'buyInsurance') {
-              const description: string = aiResponse.toolCall.arguments[0];
-              const amount: number = aiResponse.toolCall.arguments[1];
-              await buyInsurance(description, amount);
-            } else if (aiResponse.toolCall.name === 'claimInsurance') {
-              const description: string = aiResponse.toolCall.arguments[0];
-              const amount: number = aiResponse.toolCall.arguments[1];
-              const insuranceId: string = aiResponse.toolCall.arguments[2];
-
-              try {
-                // Upload claim details to IPFS.
-                const jsonData = {
-                  name: "EigenInsure Insurance Claim",
-                  description,
-                  amount
-                };
-                const ipfsHash = await uploadJsonToPinata(jsonData);
-                window.alert(`Processing home insurance claim for $${amount}. IPFS: ${ipfsHash}`);
-
-                // Create task for claim approval.
-                const taskResponse = await fetch(AVS_API_ENDPOINT, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    taskName: ipfsHash,
-                    voteThreshold: 2
-                  })
-                });
-
-                if (!taskResponse.ok) {
-                  throw new Error(`HTTP error! status: ${taskResponse.status}`);
-                }
-
-                const taskResult = await taskResponse.json();
-                console.log('Task created:', taskResult);
-                window.alert('Claim task created. Waiting for approval...');
-
-                // Poll for claim approval.
-                const approvalResult = await pollUntilComplete(ipfsHash);
-                console.log('Final approval result:', approvalResult);
-
-                if (approvalResult.approvalRate && approvalResult.approvalRate >= 50) {
-                  window.alert(`Claim approved with ${approvalResult.approvalRate}% approval rate! Processing reimbursement...`);
-                  const provider = new ethers.BrowserProvider(window.ethereum);
-                  const signer = await provider.getSigner()
-                  const address = await signer.getAddress()
-                  await reimburseInsurance(insuranceId, address, amount);
-                } else {
-                  window.alert(`Claim denied. Approval rate: ${approvalResult.approvalRate}%`);
-                }
-              } catch (error: any) {
-                console.error('Error processing claim:', error);
-                window.alert(`Failed to process claim: ${error.message || 'Unknown error occurred'}`);
-              }
-            }
-          }
-        } catch (error) {
-          // If the content isn't JSON, just display it normally.
-          console.log('Not a JSON response:', message.content);
-        }
       }
     })
+
   return (
-    <div className='flex h-4/5 flex-row w-full justify-evenly'>
-      <div className="flex flex-col h-full w-2/3">
-        <div className="flex-1 overflow-y-auto px-4">
-          {messages?.length ? (
-            <>
-              <ChatList messages={messages} />
-              <ChatScrollAnchor trackVisibility={isLoading} />
-            </>
-          ) : (
-            <EmptyScreen setInput={setInput} />
-          )}
-        </div>
-        <div className="h-1/2 max-h-[50%] overflow-y-auto border-t">
-          <ChatPanel
-            id={id}
-            isLoading={isLoading}
-            stop={stop}
-            append={append}
-            reload={reload}
-            messages={messages}
-            input={input}
-            setInput={setInput}
-          />
-        </div>
-      </div>
-      <div className="border-r p-4 overflow-y-auto w-1/3">
-        <DocumentPanel 
-          documents={documents}
-          onUpload={handleDocumentUpload}
-          // isLoading={isLoading}
-        />
-      </div>
+    <div className='flex flex-row h-full w-4/5 mx-auto'>
+    <div className={cn('flex flex-col h-full w-full', className)}>
+      <ChatList messages={messages} isLoading={isLoading} />
+      <ChatPanel
+        id={id}
+        isLoading={isLoading}
+        stop={stop}
+        append={append}
+        reload={reload}
+        messages={messages}
+        input={input}
+        setInput={setInput}
+      />
+    </div>
+    <div className='flex flex-row w-full justify-evenly'>
+      <DocumentPanel 
+        documents={documents}
+        onUpload={handleDocumentUpload}
+      />
+    </div>
     </div>
   )
 }
