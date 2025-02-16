@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const { messages, previewToken } = json
     const session = cookieStore.get('session')
     const userId = session?.value
-    
+
     if (!userId) {
       return new Response('Unauthorized', { status: 401 })
     }
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1];
     let prompt = lastMessage.content;
     let attachments = [];
-    
+
     try {
       const parsed = JSON.parse(lastMessage.content);
       prompt = parsed.text;
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 
     Tools:
     - **buyInsurance:** Parameters: [homeDescription (non-empty string), coverageAmountUSD (positive number)]
-    - **claimInsurance:** Parameters: [claimDescription (non-empty string), claimAmount (positive number)]
+    - **claimInsurance:** Parameters: [claimDescription (non-empty string), claimAmount (positive number), insuranceId (positive number)]
 `
 
     // Log the full message history for debugging
@@ -72,9 +72,9 @@ export async function POST(req: Request) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         messages: messages,  // Send the entire message history
-        system: regularPrompt 
+        system: regularPrompt
       }),
     })
 
