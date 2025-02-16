@@ -20,6 +20,7 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
+import {uploadJsonToPinata} from '@/lib/ipfs'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -57,7 +58,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
           toast.error(response.statusText)
         }
       },
-      onFinish(message) {
+      async onFinish(message) {
         try {
           // Parse the message content as JSON
           const aiResponse: AIResponse = JSON.parse(message.content)
@@ -65,8 +66,23 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
           // Handle tool calls
           if (aiResponse.toolCall) {
             if (aiResponse.toolCall.name === 'buyInsurance') {
-              const amount = aiResponse.toolCall.arguments[0]
-              window.alert(`Processing home insurance coverage for $${amount}...`)
+              const description = aiResponse.toolCall.arguments[0]
+              const amount = aiResponse.toolCall.arguments[1]
+              try {
+                const jsonData = {
+                  name: "EigenInsure Insurance Purchase",
+                  description,
+                  amount
+                }
+                const ipfsHash = await uploadJsonToPinata(jsonData);
+                console.log('Uploaded JSON to IPFS. Hash:', ipfsHash);
+
+                window.alert(`Processing home insurance coverage for $${amount}. IPFS ${ipfsHash}`)
+
+              } catch (error) {
+                console.error('Failed to upload JSON:', error);
+              }
+              
               // TODO: Call buyInsurance smart contract function for coverage amount
             } else if (aiResponse.toolCall.name === 'claimInsurance') {
               const description = aiResponse.toolCall.arguments[0]
