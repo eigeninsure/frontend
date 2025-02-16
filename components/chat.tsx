@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat, type Message } from 'ai/react'
-
+import { ethers } from 'ethers'
 import { cn } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
@@ -20,7 +20,8 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
-import {uploadJsonToPinata} from '@/lib/ipfs'
+import { uploadJsonToPinata } from '@/lib/ipfs'
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from '@/lib/contract'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -62,28 +63,71 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         try {
           // Parse the message content as JSON
           const aiResponse: AIResponse = JSON.parse(message.content)
-          
+
           // Handle tool calls
           if (aiResponse.toolCall) {
             if (aiResponse.toolCall.name === 'buyInsurance') {
+              // Refactored: call createInsurance smart contract function
               const description = aiResponse.toolCall.arguments[0]
               const amount = aiResponse.toolCall.arguments[1]
+
               try {
                 const jsonData = {
                   name: "EigenInsure Insurance Purchase",
                   description,
                   amount
                 }
-                const ipfsHash = await uploadJsonToPinata(jsonData);
-                console.log('Uploaded JSON to IPFS. Hash:', ipfsHash);
+                const ipfsHash = await uploadJsonToPinata(jsonData)
+                console.log('Uploaded JSON to IPFS. Hash:', ipfsHash)
 
-                window.alert(`Processing home insurance coverage for $${amount}. IPFS ${ipfsHash}`)
+                // --- Begin smart contract call ---
+                if (typeof window.ethereum !== 'undefined') {
+                  const provider = new ethers.BrowserProvider(window.ethereum)
+                  await provider.send('eth_requestAccounts', [])
+                  const signer = await provider.getSigner()
+                  const insuranceContract = new ethers.Contract(
+                    CONTRACT_ADDRESS,
+                    CONTRACT_ABI,
+                    signer
+                  )
 
+                  const amountToETH = amount / 3000;
+
+                  // Convert the coverage amount from ETH to wei.
+                  // Assumes the "amount" is provided as a string or number representing ETH.
+                  const securedAmount = ethers.parseEther(amountToETH.toString())
+
+                  const tx = await insuranceContract.createInsurance(
+                    securedAmount,
+                    ipfsHash
+                  )
+                  console.log('Transaction submitted:', tx.hash)
+                  toast.loading('Creating insurance...')
+                  const receipt = await tx.wait()
+                  toast.dismiss()
+                  toast.success('Insurance created successfully!')
+                  console.log('Insurance created:', receipt)
+
+                  // Optionally, extract the insuranceId from the event logs
+                  const event = receipt.events?.find(
+                    (e: any) => e.event === 'InsuranceCreated'
+                  )
+                  if (event && event.args) {
+                    const insuranceId = event.args.insuranceId
+                    window.alert(
+                      `Insurance created with ID: ${insuranceId.toString()}`
+                    )
+                  }
+                } else {
+                  toast.error(
+                    'No Ethereum provider found. Please install MetaMask.'
+                  )
+                }
+                // --- End smart contract call ---
               } catch (error) {
-                console.error('Failed to upload JSON:', error);
+                console.error('Failed to process insurance purchase:', error)
+                toast.error('Failed to process insurance purchase')
               }
-              
-              // TODO: Call buyInsurance smart contract function for coverage amount
             } else if (aiResponse.toolCall.name === 'claimInsurance') {
               const description = aiResponse.toolCall.arguments[0]
               const amount = aiResponse.toolCall.arguments[1]
@@ -93,9 +137,10 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
                 description,
                 amount
               }
-              const ipfsHash = await uploadJsonToPinata(jsonData);
-
-              window.alert(`Processing home insurance claim for $${amount} with description: ${description}. IPFS ${ipfsHash}`)
+              const ipfsHash = await uploadJsonToPinata(jsonData)
+              window.alert(
+                `Processing home insurance claim for $${amount} with description: ${description}. IPFS: ${ipfsHash}`
+              )
 
               // TODO: Call AVS create task function with amount and description.
 
@@ -104,7 +149,6 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               // If above threshold, trigger reimbursement
 
               // Else, alert() user about denial of claim.
-
             }
           }
         } catch (error) {
