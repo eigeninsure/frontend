@@ -27,6 +27,16 @@ export interface ChatProps extends React.ComponentProps<'div'> {
   id?: string
 }
 
+interface ToolCall {
+  name: string
+  arguments: any[]
+}
+
+interface AIResponse {
+  text: string
+  toolCall: ToolCall | null
+}
+
 export function Chat({ id, initialMessages, className }: ChatProps) {
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
     'ai-token',
@@ -45,6 +55,23 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       onResponse(response) {
         if (response.status === 401) {
           toast.error(response.statusText)
+        }
+      },
+      onFinish(message) {
+        try {
+          // Parse the message content as JSON
+          const aiResponse: AIResponse = JSON.parse(message.content)
+          
+          // Handle tool calls
+          if (aiResponse.toolCall) {
+            if (aiResponse.toolCall.name === 'buyInsurance') {
+              const amount = aiResponse.toolCall.arguments[0]
+              window.alert(`Would you like to purchase coverage for $${amount}?`)
+            }
+          }
+        } catch (error) {
+          // If the content isn't JSON, just display it normally
+          console.log('Not a JSON response:', message.content)
         }
       }
     })

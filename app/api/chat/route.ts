@@ -93,17 +93,18 @@ export async function POST(req: Request) {
     // Insert the chat into your database.
     await supabase.from('chats').upsert({ id, payload }).throwOnError()
 
-    // Create a ReadableStream that first sends an empty chunk then the complete text.
+    // Format the response as JSON
+    const responseText = JSON.stringify({
+      text: result.text,
+      toolCall: result.toolCall
+    })
+
+    // Create a ReadableStream
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Immediately enqueue an empty chunk.
-          controller.enqueue(encoder.encode(""))
-          // Wait briefly to simulate streaming.
-          await new Promise(resolve => setTimeout(resolve, 50))
-          // Enqueue the full text.
-          controller.enqueue(encoder.encode(text))
+          controller.enqueue(encoder.encode(responseText))
           controller.close()
         } catch (err) {
           console.error("Streaming error:", err)
