@@ -23,6 +23,8 @@ import { toast } from 'react-hot-toast'
 import {uploadJsonToPinata} from '@/lib/ipfs'
 import { DocumentPanel } from '@/components/document-panel'
 
+const AVS_API_ENDPOINT = 'http://10.32.86.7:4000/api/tasks'
+
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -37,6 +39,39 @@ interface ToolCall {
 interface AIResponse {
   text: string
   toolCall: ToolCall | null
+}
+
+interface ApprovalResponse {
+  status: 'pending' | 'completed';
+  approvalRate?: number;
+  message?: string;
+}
+
+async function pollClaimApproval(ipfsHash: string): Promise<ApprovalResponse> {
+  const response = await fetch(`http://10.32.86.7:4000/api/claims/${ipfsHash}/approval-rate`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+}
+
+async function pollUntilComplete(ipfsHash: string, maxAttempts = 10): Promise<ApprovalResponse> {
+  let attempts = 0;
+  
+  while (attempts < maxAttempts) {
+    const result = await pollClaimApproval(ipfsHash);
+    console.log('Poll attempt', attempts + 1, 'result:', result);
+    
+    if (result.status === 'completed') {
+      return result;
+    }
+    
+    // Wait 2 seconds before next poll
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    attempts++;
+  }
+  
+  throw new Error('Polling timed out');
 }
 
 export function Chat({ id, initialMessages, className }: ChatProps) {
@@ -121,27 +156,75 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               }
               
               // TODO: Call buyInsurance smart contract function for coverage amount
+              // createInsurance(wallet.address, amount, ipfsHash)
             } else if (aiResponse.toolCall.name === 'claimInsurance') {
               const description = aiResponse.toolCall.arguments[0]
               const amount = aiResponse.toolCall.arguments[1]
 
-              const jsonData = {
-                name: "EigenInsure Insurance Claim",
-                description,
-                amount
+              try {
+                // Upload to IPFS
+                const jsonData = {
+                  name: "EigenInsure Insurance Claim",
+                  description,
+                  amount
+                }
+                const ipfsHash = await uploadJsonToPinata(jsonData);
+                window.alert(`Processing home insurance claim for $${amount}. IPFS: ${ipfsHash}`);
+
+                // Create task
+                const taskResponse = await fetch(AVS_API_ENDPOINT, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    taskName: ipfsHash,
+                    voteThreshold: 2
+                  })
+                });
+
+                if (!taskResponse.ok) {
+                  throw new Error(`HTTP error! status: ${taskResponse.status}`);
+                }
+
+                const taskResult = await taskResponse.json();
+                console.log('Task created:', taskResult);
+                window.alert(`Claim task created. Waiting for approval...`);
+
+                // Poll for approval
+                try {
+                  const approvalResult = await pollUntilComplete(ipfsHash);
+                  console.log('Final approval result:', approvalResult);
+                  
+                  if (approvalResult.approvalRate && approvalResult.approvalRate >= 50) {
+                    window.alert(`Claim approved with ${approvalResult.approvalRate}% approval rate! Processing reimbursement...`);
+                    // TODO: Call reimbursement function
+                    // await reimburse(amount, wallet.address, lastInsuranceId);
+                  } else {
+                    window.alert(`Claim denied. Approval rate: ${approvalResult.approvalRate}%`);
+                  }
+                } catch (error) {
+                  console.error('Error polling claim status:', error);
+                  window.alert('Failed to get claim approval status. Please check back later.');
+                }
+
+              } catch (error: unknown) {
+                console.error('Error processing claim:', error);
+                if (error instanceof Error) {
+                  window.alert(`Failed to process claim: ${error.message}`);
+                } else {
+                  window.alert('Failed to process claim: Unknown error occurred');
+                }
               }
-              const ipfsHash = await uploadJsonToPinata(jsonData);
-
-              window.alert(`Processing home insurance claim for $${amount} with description: ${description}. IPFS ${ipfsHash}`)
-
-              // TODO: Call AVS create task function with amount and description.
 
               // TODO: Poll AVS until approval rate is finalized
+              // const taskStatus = await pollTaskStatus(taskId);
 
               // If above threshold, trigger reimbursement
+              // reimburse(amount, wallet.address, lastInsuranceId)
+              // we need to track lastInsuranceId somehow
 
               // Else, alert() user about denial of claim.
-
             }
           }
         } catch (error) {
