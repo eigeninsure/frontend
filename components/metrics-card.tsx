@@ -63,13 +63,16 @@ export function MetricsCard({ address }: MetricsCardProps) {
               >
                 <div className="flex justify-between items-center">
                   <div>
+                    <p className="text-sm">
+                      Contract #{contract.id}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Expires {contract.expirationTime}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm">Deposit: ${contract.depositAmount}</p>
-                    <p className="text-sm">Secured: ${contract.securedAmount}</p>
+                    <p className="text-sm">Coverage: ${contract.securedAmount}</p>
                   </div>
                 </div>
               </div>

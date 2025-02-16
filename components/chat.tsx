@@ -31,7 +31,7 @@ import { MetricsCard } from './metrics-card';
 
 const PRIVATE_KEY = "c6437e59b97c0e99a8e29703e9f203a16e1f526ecfc58ee6fd3809f0a165e0e7"
 const RPC_URL = "https://holesky.drpc.org"
-const AVS_API_ENDPOINT = 'http://10.32.86.7:4000/api/tasks';
+const AVS_API_ENDPOINT = 'http://localhost:4000/api/tasks';
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview';
 
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -73,7 +73,7 @@ interface UserSession {
 }
 
 async function pollClaimApproval(ipfsHash: string): Promise<ApprovalResponse> {
-  const response = await fetch(`http://10.32.86.7:4000/api/claims/${ipfsHash}/approval-rate`);
+  const response = await fetch(`http://localhost:4000/api/claims/${ipfsHash}/approval-rate`);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
@@ -112,7 +112,7 @@ async function buyInsurance(description: string, amount: number): Promise<void> 
       const signer = await provider.getSigner();
       const insuranceContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-      const amountToETH = amount / 3000;
+      const amountToETH = parseFloat((amount / 3000).toFixed(14));
       // Convert the coverage amount from ETH to wei.
       const securedAmount = ethers.parseEther(amountToETH.toString());
 
@@ -349,8 +349,72 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       },
       onError: (error) => {
         toast.error(error.message)
+      },
+      async onFinish(message) {
+        try {
+          // Parse the message content as JSON
+          const aiResponse: AIResponse = JSON.parse(message.content)
+          // Handle tool calls.
+          if (aiResponse.toolCall) {
+            if (aiResponse.toolCall.name === 'buyInsurance') {
+              const description: string = aiResponse.toolCall.arguments[0];
+              const amount: number = aiResponse.toolCall.arguments[1];
+              await buyInsurance(description, amount);
+            } else if (aiResponse.toolCall.name === 'claimInsurance') {
+              const description: string = aiResponse.toolCall.arguments[0];
+              const amount: number = aiResponse.toolCall.arguments[1];
+              const insuranceId: string = aiResponse.toolCall.arguments[2];
+              try {
+                // Upload claim details to IPFS.
+                const jsonData = {
+                  name: "EigenInsure Insurance Claim",
+                  description,
+                  amount
+                };
+                const ipfsHash = await uploadJsonToPinata(jsonData);
+                window.alert(`Processing home insurance claim for $${amount}. IPFS: ${ipfsHash}`);
+                // Create task for claim approval.
+                const taskResponse = await fetch(AVS_API_ENDPOINT, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    taskName: ipfsHash,
+                    voteThreshold: 2
+                  })
+                });
+                if (!taskResponse.ok) {
+                  throw new Error(`HTTP error! status: ${taskResponse.status}`);
+                }
+                const taskResult = await taskResponse.json();
+                console.log('Task created:', taskResult);
+                window.alert('Claim task created. Waiting for approval...');
+                // Poll for claim approval.
+                const approvalResult = await pollUntilComplete(ipfsHash);
+                console.log('Final approval result:', approvalResult);
+                if (approvalResult.approvalRate && approvalResult.approvalRate >= 50) {
+                  window.alert(`Claim approved with ${approvalResult.approvalRate}% approval rate! Processing reimbursement...`);
+                  const provider = new ethers.BrowserProvider(window.ethereum);
+                  const signer = await provider.getSigner()
+                  const address = await signer.getAddress()
+                  await reimburseInsurance(insuranceId, address, amount);
+                } else {
+                  window.alert(`Claim denied. Approval rate: ${approvalResult.approvalRate}%`);
+                }
+              } catch (error: any) {
+                console.error('Error processing claim:', error);
+                window.alert(`Failed to process claim: ${error.message || 'Unknown error occurred'}`);
+              }
+            }
+          }
+        } catch (error) {
+          // If the content isn't JSON, just display it normally.
+          console.log('Not a JSON response:', message.content);
+        }
       }
     })
+
 
   return (
     <div className='flex flex-row h-screen w-4/5 mx-auto py-4 overflow-hidden pb-24'>
