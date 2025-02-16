@@ -91,6 +91,9 @@ export async function POST(req: Request) {
       ],
     }
 
+    // Insert the chat into your database.
+    await supabase.from('chats').upsert({ id, payload }).throwOnError()
+
     // Create a ReadableStream that first sends an empty chunk then the complete text.
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
