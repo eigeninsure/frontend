@@ -87,7 +87,16 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
             } else if (aiResponse.toolCall.name === 'claimInsurance') {
               const description = aiResponse.toolCall.arguments[0]
               const amount = aiResponse.toolCall.arguments[1]
-              window.alert(`Processing home insurance claim for $${amount} with description: ${description}...`)
+
+              const jsonData = {
+                name: "EigenInsure Insurance Claim",
+                description,
+                amount
+              }
+              const ipfsHash = await uploadJsonToPinata(jsonData);
+
+              window.alert(`Processing home insurance claim for $${amount} with description: ${description}. IPFS ${ipfsHash}`)
+
               // TODO: Call AVS create task function with amount and description.
 
               // TODO: Poll AVS until approval rate is finalized
