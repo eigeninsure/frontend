@@ -1,86 +1,72 @@
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACT_ABI } from '@/lib/contract';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract';
 
 interface InsuranceData {
-  totalPaid: number;
-  totalCoverable: number;
+  totalDeposit: number;
+  totalSecured: number;
   contracts: Array<{
     id: string;
-    name: string;
-    paid: number;
-    covered: number;
-    expiry: string;
+    depositAmount: number;
+    securedAmount: number;
+    expirationTime: string;
   }>;
 }
 
 export function useInsuranceData(address?: string) {
   const [data, setData] = useState<InsuranceData>({
-    totalPaid: 0,
-    totalCoverable: 0,
+    totalDeposit: 0,
+    totalSecured: 0,
     contracts: []
   });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-      if (!address) return;
-
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner()
+        const address = await signer.getAddress()
         const contract = new ethers.Contract(
-          process.env.NEXT_PUBLIC_INSURANCE_POOL_ADDRESS!,
+          CONTRACT_ADDRESS,
           CONTRACT_ABI,
           provider
         );
 
-        // Get all insurance IDs for the address with pagination
-        const currentBlock = await provider.getBlockNumber();
-        let fromBlock = currentBlock - 1;
-        let toBlock = currentBlock;
-        const batchSize = 5000; // Stay under node's block range limit
-        const allEvents = [];
-        
-        while (fromBlock >= 0) {
-          fromBlock = Math.max(0, toBlock - batchSize);
-          const filter = contract.filters.InsuranceCreated(address);
-          const events = await contract.queryFilter(filter, fromBlock, toBlock);
-          allEvents.push(...events);
-          
-          if (fromBlock === 0) break;
-          toBlock = fromBlock - 1;
+        // Fetch insurances for the given address
+        const userInsurances = [];
+        let i = 0;
+        while (true) {
+          try {
+            const insurance = await contract.insurances(address, i);
+            userInsurances.push(insurance);
+            i++;
+          } catch (error) {
+            console.error('Error fetching insurance:', error);
+            break;
+          }
         }
 
-        let totalPaid = 0;
-        let totalCoverable = 0;
-        const contracts = [];
-
-        for (const event of allEvents) {
-          const insuranceId = (event as any).args[0];
-          const insurance = await contract.insurances(address, insuranceId);
-          
-          // Convert from Wei to ETH to USD (using hardcoded rate for demo)
-          const ETH_TO_USD_RATE = 3333; // 1 ETH = $3333 USD
-          const depositInUSD = Number(ethers.formatEther(insurance.depositAmount)) * ETH_TO_USD_RATE;
-          const coverageInUSD = depositInUSD * 2; // Assuming 2x coverage
-
-          totalPaid += depositInUSD;
-          totalCoverable += coverageInUSD;
-
-          contracts.push({
-            id: insuranceId.toString(),
-            name: `Insurance #${insuranceId}`,
-            paid: depositInUSD,
-            covered: coverageInUSD,
-            expiry: new Date(Number(insurance.activationTime) * 1000 + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-          });
-        }
+        const filteredInsurances = userInsurances.filter(insurance => insurance[3] && insurance[4]);
+        const formattedInsurances = filteredInsurances.map((insurance, index) => ({
+          id: index.toString(),
+          depositAmount: Number(insurance[0]),
+          securedAmount: Number(insurance[1]),
+          expirationTime: new Date(Number(insurance[2]) * 1000).toISOString()
+        }));
 
         setData({
-          totalPaid,
-          totalCoverable,
-          contracts
+          totalDeposit: formattedInsurances.reduce((acc, insurance) => acc + insurance.depositAmount, 0),
+          totalSecured: formattedInsurances.reduce((acc, insurance) => acc + insurance.securedAmount, 0),
+          contracts: formattedInsurances
         });
+
+        console.log({
+          totalDeposit: formattedInsurances.reduce((acc, insurance) => acc + insurance.depositAmount, 0),
+          totalSecured: formattedInsurances.reduce((acc, insurance) => acc + insurance.securedAmount, 0),
+          contracts: formattedInsurances
+        })
+
       } catch (error) {
         console.error('Error fetching insurance data:', error);
       } finally {
@@ -89,6 +75,7 @@ export function useInsuranceData(address?: string) {
       setIsLoading(false);
     }
 
+    console.log("hello")
     fetchData();
   }, [address]);
 
