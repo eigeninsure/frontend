@@ -124,9 +124,13 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
                 // TODO: Store taskId for polling
                 // const taskId = taskResult.taskId;
 
-              } catch (error) {
+              } catch (error: unknown) {
                 console.error('Error creating task:', error);
-                window.alert(`Failed to create claim task: ${error.message}`);
+                if (error instanceof Error) {
+                  window.alert(`Failed to create claim task: ${error.message}`);
+                } else {
+                  window.alert('Failed to create claim task: Unknown error occurred');
+                }
               }
 
               // TODO: Poll AVS until approval rate is finalized
