@@ -353,9 +353,11 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
     })
 
   return (
-    <div className='flex flex-row h-full w-4/5 mx-auto'>
+    <div className='flex flex-row h-full w-full mx-auto'>
     <div className={cn('flex flex-col h-full w-full mt-4', className)}>
     <h2 className="text-lg font-semibold mb-4">Assistant</h2>
+
+    {/* <div className='h-1/2 absolute overflow-y-scroll mt-8'> */}
 
     {messages.length == 0 ? (
       <EmptyScreen setInput={setInput} />
@@ -374,6 +376,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         setInput={setInput}
       />
     </div>
+
+    {/* </div> */}
     <div className='flex flex-row w-full justify-evenly'>
       <DocumentPanel 
         documents={documents}
