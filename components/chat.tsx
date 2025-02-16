@@ -1,6 +1,8 @@
 'use client'
 
 import { useChat, type Message } from 'ai/react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { Database } from '@/lib/db_types'
 
 import { cn } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
@@ -16,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
@@ -45,6 +47,23 @@ interface ApprovalResponse {
   status: 'pending' | 'completed';
   approvalRate?: number;
   message?: string;
+}
+
+interface ChatDocument {
+  id: string
+  chat_id: string
+  user_id: string
+  name: string
+  type: 'pdf' | 'image'
+  preview: string
+  ipfs_hash: string
+  created_at: string
+}
+
+interface UserSession {
+  id: string
+  email?: string
+  address?: string
 }
 
 async function pollClaimApproval(ipfsHash: string): Promise<ApprovalResponse> {
@@ -81,13 +100,69 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   )
   const [previewTokenDialog, setPreviewTokenDialog] = useState(IS_PREVIEW)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
-  const [documents, setDocuments] = useState<Array<{
-    id: string
-    type: 'pdf' | 'image'
-    name: string
-    preview: string
-    ipfsHash: string
-  }>>([])
+  const supabase = createClientComponentClient<Database>()
+  const [documents, setDocuments] = useState<ChatDocument[]>([])
+  const [user, setUser] = useState<UserSession | null>(null)
+
+  // Check authentication status when component mounts
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error) {
+        console.error('Error fetching session:', error)
+        return
+      }
+      
+      if (session?.user) {
+        // Get user data including wallet address
+        const { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        setUser({
+          ...session.user,
+          address: userData?.address
+        })
+      }
+    }
+
+    checkUser()
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase])
+
+  // Load documents when chat loads and user is authenticated
+  useEffect(() => {
+    if (id && user?.address) {
+      const loadDocuments = async () => {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('chat_id', id)
+          .eq('user_id', user.address!.toLowerCase())
+          .order('created_at', { ascending: true })
+
+        if (error) {
+          console.error('Error loading documents:', error)
+          toast.error('Failed to load documents')
+          return
+        }
+
+        setDocuments(data || [])
+      }
+
+      loadDocuments()
+    }
+  }, [id, user, supabase])
 
   const handleDocumentUpload = async (file: File, preview: string, type: 'pdf' | 'image') => {
     try {
@@ -101,15 +176,38 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       }
       
       const ipfsHash = await uploadJsonToPinata(jsonData)
-      
-      setDocuments(prev => [...prev, {
-        id: Math.random().toString(36).substring(7),
-        type,
-        name: file.name,
-        preview,
-        ipfsHash
-      }])
 
+      // Only store in database if user is authenticated
+      if (user?.id) {
+        const { data, error } = await supabase
+          .from('documents')
+          .insert({
+            chat_id: id || 'default',
+            user_id: user.id,
+            name: file.name,
+            type,
+            preview,
+            ipfs_hash: ipfsHash
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+        setDocuments(prev => [...prev, data])
+      } else {
+        // Add to local documents state without database persistence
+        setDocuments(prev => [...prev, {
+          id: Math.random().toString(36).substring(7),
+          chat_id: id || 'default',
+          user_id: 'anonymous',
+          name: file.name,
+          type,
+          preview,
+          ipfs_hash: ipfsHash,
+          created_at: new Date().toISOString()
+        }])
+      }
+      
       toast.success(`File uploaded to IPFS: ${ipfsHash}`)
     } catch (error) {
       console.error('Failed to upload to IPFS:', error)
@@ -123,12 +221,15 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       id,
       body: {
         id,
-        previewToken
+        previewToken,
+        documents: documents.map(doc => ({
+          type: doc.type,
+          name: doc.name,
+          ipfsHash: doc.ipfs_hash
+        }))
       },
-      onResponse(response) {
-        if (response.status === 401) {
-          toast.error(response.statusText)
-        }
+      onError: (error) => {
+        toast.error(error.message)
       },
       async onFinish(message) {
         try {

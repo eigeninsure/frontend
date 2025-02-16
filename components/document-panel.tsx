@@ -3,15 +3,21 @@ import { Button } from '@/components/ui/button'
 import { IconPlus } from '@/components/ui/icons'
 import { uploadJsonToPinata } from '@/lib/ipfs'
 import { cn } from '@/lib/utils'
+import { toast } from 'react-hot-toast'
+
+interface ChatDocument {
+  id: string
+  chat_id: string
+  user_id: string
+  name: string
+  type: 'pdf' | 'image'
+  preview: string
+  ipfs_hash: string
+  created_at: string
+}
 
 interface DocumentPanelProps {
-  documents: Array<{
-    id: string
-    type: 'pdf' | 'image'
-    name: string
-    preview: string
-    ipfsHash: string
-  }>
+  documents: ChatDocument[]
   onUpload: (file: File, preview: string, type: 'pdf' | 'image') => Promise<void>
 }
 
@@ -35,7 +41,7 @@ export function DocumentPanel({ documents, onUpload }: DocumentPanelProps) {
   }
 
   return (
-    <div className="fixed right-0 top-0 w-1/3 h-full  p-4 pt-20 overflow-y-auto">
+    <div className="fixed right-0 top-20 w-1/3 h-full p-4 overflow-y-auto">
       <h2 className="text-lg font-semibold mb-4">Documents</h2>
       
       <input
@@ -47,17 +53,7 @@ export function DocumentPanel({ documents, onUpload }: DocumentPanelProps) {
         className="hidden"
       />
       
-      <div className="grid grid-cols-2 gap-6">
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className={cn(
-            "h-32 border-2 border-dashed rounded-lg flex items-center justify-center",
-            "hover:border-gray-400 transition-colors group"
-          )}
-        >
-          <IconPlus className="h-8 w-8 text-gray-400 group-hover:text-gray-600" />
-        </button>
-        
+      <div className="grid grid-cols-2 gap-2">
         {documents.map(doc => (
           <div
             key={doc.id}
@@ -79,6 +75,12 @@ export function DocumentPanel({ documents, onUpload }: DocumentPanelProps) {
             </div>
           </div>
         ))}
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="h-32 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+        >
+          <IconPlus className="h-8 w-8 text-gray-400" />
+        </div>
       </div>
     </div>
   )

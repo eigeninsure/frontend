@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     })
 
     const json = await req.json()
+    
     const { messages, previewToken } = json
     const session = cookieStore.get('session')
     const userId = session?.value
@@ -24,29 +25,19 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    // Parse the last message content for attachments
+    // Parse the last message content and get documents
     const lastMessage = messages[messages.length - 1];
     let prompt = lastMessage.content;
-    let attachments = [];
+    const documents = json.body?.documents || [];
     
-    try {
-      const parsed = JSON.parse(lastMessage.content);
-      prompt = parsed.text;
-      attachments = parsed.attachments || [];
-    } catch (e) {
-      // If parsing fails, use content as-is
-    }
+    // Add documents context to the prompt
+    const documentsContext = documents.map((doc: any) => 
+      `${doc.type === 'pdf' ? 'PDF' : 'Image'} (${doc.name}): https://gateway.pinata.cloud/ipfs/${doc.ipfsHash}`
+    ).join('\n');
 
-    // Add attachments to the prompt
-    const attachmentContext = attachments.map((att: { type: string; name: any; content: any }) => {
-      if (att.type === 'pdf') {
-        return `PDF Content (${att.name}): ${att.content}`;
-      } else if (att.type === 'image') {
-        return `Image (${att.name}): [Base64 image data attached]`;
-      }
-    }).join('\n\n');
-
-    const fullPrompt = attachmentContext ? `${prompt}\n\nContext from attachments:\n${attachmentContext}` : prompt;
+    const fullPrompt = documentsContext 
+      ? `${prompt}\n\nRelevant documents:\n${documentsContext}` 
+      : prompt;
 
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
     Flows:

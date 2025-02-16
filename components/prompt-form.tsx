@@ -14,10 +14,11 @@ import {
 import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
 import { ArrowUp } from 'lucide-react'
 
-export interface PromptProps
-  extends Pick<UseChatHelpers, 'input' | 'setInput'> {
-  onSubmit: (value: string) => Promise<void>
-  isLoading: boolean
+interface PromptFormProps {
+  onSubmit: (value: string, attachments: File[]) => Promise<void>
+  input?: string
+  setInput: (value: string) => void
+  isLoading?: boolean
 }
 
 export function PromptForm({
@@ -25,7 +26,7 @@ export function PromptForm({
   input,
   setInput,
   isLoading
-}: PromptProps) {
+}: PromptFormProps) {
   const { formRef, onKeyDown } = useEnterSubmit()
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -37,7 +38,7 @@ export function PromptForm({
           return
         }
         setInput('')
-        await onSubmit(input)
+        await onSubmit(input, [])
       }}
       ref={formRef}
     >

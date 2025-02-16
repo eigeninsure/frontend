@@ -37,27 +37,54 @@ export interface Database {
       chats: {
         Row: {
           id: string
+          user_id: string
           payload: Json | null
-          user_id: string | null
+          created_at: string
         }
         Insert: {
           id: string
+          user_id: string
           payload?: Json | null
-          user_id?: string | null
+          created_at?: string
         }
         Update: {
           id?: string
+          user_id?: string
           payload?: Json | null
-          user_id?: string | null
+          created_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "chats_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+      }
+      documents: {
+        Row: {
+          id: string
+          chat_id: string
+          user_id: string
+          name: string
+          type: 'pdf' | 'image'
+          preview: string
+          ipfs_hash: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          chat_id: string
+          user_id: string
+          name: string
+          type: 'pdf' | 'image'
+          preview: string
+          ipfs_hash: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          chat_id?: string
+          user_id?: string
+          name?: string
+          type?: 'pdf' | 'image'
+          preview?: string
+          ipfs_hash?: string
+          created_at?: string
+        }
       }
     }
     Views: {
