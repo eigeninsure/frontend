@@ -84,6 +84,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               }
               
               // TODO: Call buyInsurance smart contract function for coverage amount
+              // createInsurance(wallet.address, amount, ipfsHash)
             } else if (aiResponse.toolCall.name === 'claimInsurance') {
               const description = aiResponse.toolCall.arguments[0]
               const amount = aiResponse.toolCall.arguments[1]
@@ -102,6 +103,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               // TODO: Poll AVS until approval rate is finalized
 
               // If above threshold, trigger reimbursement
+              // reimburse(amount, wallet.address, lastInsuranceId)
+              // we need to track lastInsuranceId somehow
 
               // Else, alert() user about denial of claim.
 
