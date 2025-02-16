@@ -27,7 +27,7 @@ const exampleMessages = [
 export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
   return (
     <div className="flex flex-col items-center h-full">
-      <div className="fixed bottom-32 left-0 right-0 mx-auto w-full max-w-2xl px-4">
+      <div className=" bottom-32 left-0 right-0 mx-auto w-full max-w-2xl px-4">
         <div className="w-full flex flex-row items-start gap-4">
           {exampleMessages.map((message, index) => (
             <Card key={index} className="cursor-pointer w-full" onClick={() => setInput(message.message)}>

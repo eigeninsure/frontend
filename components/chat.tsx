@@ -353,7 +353,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
     })
 
   return (
-    <div className='flex flex-row h-screen w-4/5 mx-auto py-4 overflow-hidden'>
+    <div className='flex flex-row h-screen w-4/5 mx-auto py-4 overflow-hidden pb-24'>
       <div className={cn('flex flex-col h-full w-full space-y-4 relative', className)}>
         <div className='flex-none'>
           <h2 className="text-lg font-semibold mb-2">Documents</h2>
@@ -363,7 +363,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
           />
         </div>
         
-        <div className='flex-1 min-h-0 flex flex-col'>
+        <div className='h-2/3 flex flex-col absolute bottom-10 left-0 right-0'>
           <h2 className="text-lg font-semibold mb-4 flex-none">Assistant</h2>
           <div className='flex-1 overflow-y-auto min-h-0'>
             {messages.length === 0 ? (
@@ -372,19 +372,19 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               <ChatList messages={messages} isLoading={isLoading} />
             )}
           </div>
-        </div>
 
-        <div className='flex-none'>
-          <ChatPanel
-            id={id}
-            isLoading={isLoading}
-            stop={stop}
-            append={append}
-            reload={reload}
-            messages={messages}
-            input={input}
-            setInput={setInput}
-          />
+          <div className='flex-none'>
+            <ChatPanel
+              id={id}
+              isLoading={isLoading}
+              stop={stop}
+              append={append}
+              reload={reload}
+              messages={messages}
+              input={input}
+              setInput={setInput}
+            />
+          </div>
         </div>
       </div>
     </div>

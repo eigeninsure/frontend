@@ -33,8 +33,8 @@ export function MetricsCard({ address }: MetricsCardProps) {
   }
 
   return (
-    <div className="border rounded-lg bg-background shadow-sm w-full">
-      <div className="p-4">
+    <div className="border rounded-lg bg-background shadow-sm w-4/5 mx-auto  mt-24 w-full">
+      <div className="p-4 mx-0">
         <div className="flex justify-between items-center gap-4">
           <div className="flex-1 flex justify-between">
             <div className="w-1/2 pr-2 border-r">

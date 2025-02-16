@@ -52,7 +52,7 @@ export function PromptForm({
           onChange={e => setInput(e.target.value)}
           placeholder="Send a message."
           spellCheck={false}
-          className=" align-middle min-h-[30px] w-full resize-none bg-transparent px-4 py-3 focus-within:outline-none sm:text-sm"
+          className=" align-middle min-h-[30px] w-full  resize-none bg-transparent px-4 py-3 focus-within:outline-none sm:text-sm"
         />
         <div className='flex flex-col justify-center'>
           <Button type="submit" size='icon'  className='align-middle justify-end rounded-full cursor-pointer hover:rounded-xl transition-all duration-300' disabled={isLoading}>
