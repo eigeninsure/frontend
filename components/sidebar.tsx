@@ -7,10 +7,11 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import type { Database } from '@/lib/db_types'
+import type { Chat } from '@/lib/types'
 
 export function Sidebar() {
   const router = useRouter()
-  const [chats, setChats] = React.useState<Database['public']['Tables']['chats']['Row'][]>([])
+  const [chats, setChats] = React.useState<Chat[]>([])
   const supabase = createClientComponentClient<Database>()
 
   React.useEffect(() => {
@@ -24,13 +25,21 @@ export function Sidebar() {
         .order('created_at', { ascending: false })
 
       if (!error && data) {
-        setChats(data)
+        const formattedChats = data.map(chat => ({
+          id: chat.id,
+          title: (chat.payload as any)?.title || `Chat ${chat.id}`,
+          createdAt: new Date(chat.created_at),
+          userId: chat.user_id,
+          path: `/chat/${chat.id}`,
+          messages: (chat.payload as any)?.messages || [],
+          sharePath: (chat.payload as any)?.sharePath
+        }))
+        setChats(formattedChats)
       }
     }
 
     loadChats()
 
-    // Subscribe to changes
     const channel = supabase
       .channel('chats')
       .on('postgres_changes', 
@@ -62,9 +71,9 @@ export function Sidebar() {
               key={chat.id}
               variant="ghost"
               className="w-full justify-start px-4 py-2 text-left"
-              onClick={() => router.push(`/chat/${chat.id}`)}
+              onClick={() => router.push(chat.path)}
             >
-              {(chat.payload as { title: string })?.title || `Chat ${chat.id}`}
+              {chat.title}
             </Button>
           ))}
         </div>

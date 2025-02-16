@@ -346,6 +346,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
           <EmptyScreen setInput={setInput} />
         )}
       </div>
+      <div className='w-full flex flex-row justify-evenly'>
       <ChatPanel
         id={id}
         isLoading={isLoading}
@@ -360,6 +361,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         documents={documents}
         onUpload={handleDocumentUpload}
       />
+      </div>
       
       <Dialog open={previewTokenDialog} onOpenChange={setPreviewTokenDialog}>
         <DialogContent>

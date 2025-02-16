@@ -51,7 +51,10 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             : 'bg-primary text-primary-foreground'
         )}
       >
-        {message.role === 'user' ? <IconUser /> : <IconOpenAI />}
+        {message.role === 'user' ? <IconUser /> :
+        <img src="https://cryptologos.cc/logos/eigenlayer-eigen-logo.png" className='w-[24px] h-[24px]' />
+
+        }
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
         <MemoizedReactMarkdown
@@ -117,7 +120,8 @@ export function ChatMessageLoading() {
   return (
     <div className="group relative mb-4 flex items-start md:-ml-12">
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow bg-primary text-primary-foreground">
-        <IconOpenAI />
+        {/* <IconOpenAI /> */}
+        <img src="https://cryptologos.cc/logos/eigenlayer-eigen-logo.png" className='w-[24px] h-[24px]' />
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
         <div className="animate-pulse flex space-x-4">
