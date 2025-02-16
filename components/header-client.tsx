@@ -18,7 +18,7 @@ export function HeaderClient({ address }: { address?: string }) {
   }
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between  px-4 ">
+    <header className="sticky bg-white top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between  px-4 ">
       <div className="flex items-center gap-4">
         <Sidebar />
         <Button

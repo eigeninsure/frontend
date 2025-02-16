@@ -27,7 +27,7 @@ export function ChatList({ messages, isLoading }: ChatList) {
       {messages.map((message, index) => (
         <div key={index}>
           <ChatMessage message={message} />
-          {index < messages.length - 1 && (
+          {(index < messages.length - 1 || isLoading) && (
             <Separator className="my-4 md:my-8" />
           )}
         </div>

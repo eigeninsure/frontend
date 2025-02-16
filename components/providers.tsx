@@ -8,7 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 
 export function Providers({ children, ...props }: ThemeProviderProps) {
   return (
-    <NextThemesProvider {...props}>
+    <NextThemesProvider {...props} forcedTheme="light">
       <TooltipProvider>{children}</TooltipProvider>
     </NextThemesProvider>
   )

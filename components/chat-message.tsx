@@ -118,7 +118,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
 
 export function ChatMessageLoading() {
   return (
-    <div className="group relative mb-4 flex items-start md:-ml-12">
+    <div className="group relative mb-4 mt-4 flex items-start md:-ml-12">
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow bg-primary text-primary-foreground">
         {/* <IconOpenAI /> */}
         <img src="https://cryptologos.cc/logos/eigenlayer-eigen-logo.png" className='w-[24px] h-[24px]' />
