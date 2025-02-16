@@ -23,8 +23,29 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    // Use the last message as the prompt.
-    const prompt = messages[messages.length - 1].content
+    // Parse the last message content for attachments
+    const lastMessage = messages[messages.length - 1];
+    let prompt = lastMessage.content;
+    let attachments = [];
+    
+    try {
+      const parsed = JSON.parse(lastMessage.content);
+      prompt = parsed.text;
+      attachments = parsed.attachments || [];
+    } catch (e) {
+      // If parsing fails, use content as-is
+    }
+
+    // Add attachments to the prompt
+    const attachmentContext = attachments.map((att: { type: string; name: any; content: any }) => {
+      if (att.type === 'pdf') {
+        return `PDF Content (${att.name}): ${att.content}`;
+      } else if (att.type === 'image') {
+        return `Image (${att.name}): [Base64 image data attached]`;
+      }
+    }).join('\n\n');
+
+    const fullPrompt = attachmentContext ? `${prompt}\n\nContext from attachments:\n${attachmentContext}` : prompt;
 
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for car insurance via EigenLayer and Metamask. Introduce yourself and guide users.
     Flows:
@@ -45,7 +66,7 @@ export async function POST(req: Request) {
     `
 
     // Log the prompt details for debugging.
-    console.log("Sending request to generation API with prompt:", prompt)
+    console.log("Sending request to generation API with prompt:", fullPrompt)
 
     // Call your custom API endpoint.
     const apiResponse = await fetch("http://localhost:8000/api/generate", {
@@ -53,7 +74,10 @@ export async function POST(req: Request) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ messages: [prompt], system: regularPrompt }),
+      body: JSON.stringify({ 
+        messages: [fullPrompt], 
+        system: regularPrompt 
+      }),
     })
 
     console.log("API response status:", apiResponse.status)
