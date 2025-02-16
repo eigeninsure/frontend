@@ -24,8 +24,8 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    // Use the last message as the prompt.
-    const prompt = messages[messages.length - 1].content
+    // Remove single prompt extraction since we'll use full history
+    // const prompt = messages[messages.length - 1].content
 
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
     Flows:
@@ -40,16 +40,19 @@ export async function POST(req: Request) {
     - **claimInsurance:** Parameters: claimDescription (non-empty string), claimAmount (positive number)
 `
 
-    // Log the prompt details for debugging.
-    console.log("Sending request to generation API with prompt:", prompt)
+    // Log the full message history for debugging
+    console.log("Sending request to generation API with messages:", messages)
 
-    // Call your custom API endpoint.
+    // Call your custom API endpoint with full message history
     const apiResponse = await fetch("http://localhost:8000/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ messages: [prompt], system: regularPrompt }),
+      body: JSON.stringify({ 
+        messages: messages,  // Send the entire message history
+        system: regularPrompt 
+      }),
     })
 
     console.log("API response status:", apiResponse.status)
