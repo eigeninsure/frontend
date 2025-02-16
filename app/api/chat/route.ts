@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     If no tool is used, "toolCall" is null.
 
     Tools:
-    - **buyInsurance:** Parameters: coverageAmountUSD (positive number)
+    - **buyInsurance:** Parameters: homeDescription (non-empty string), coverageAmountUSD (positive number)
     - **claimInsurance:** Parameters: claimDescription (non-empty string), claimAmount (positive number)
 `
 
