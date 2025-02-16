@@ -1,8 +1,9 @@
 import 'server-only'
-import { StreamingTextResponse } from 'ai'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+
 import { Database } from '@/lib/db_types'
+import { StreamingTextResponse } from 'ai'
+import { cookies } from 'next/headers'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
@@ -26,23 +27,18 @@ export async function POST(req: Request) {
     // Use the last message as the prompt.
     const prompt = messages[messages.length - 1].content
 
-    const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for car insurance via EigenLayer and Metamask. Introduce yourself and guide users.
+    const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
     Flows:
-    - **New Insurance:** Ask if they want to buy insurance, get car details (description/images) to compute premium & coverage, then confirm.
-    - **Claims:** Ask if they want to file a claim, gather accident info (description, reports, photos) and process the claim.
-
-    For code/content >10 lines, use artifacts.
-
+    - **Buy Insurance:** Ask if they want to buy insurance, purchase the insurance as soon as the coverage amount / home value is provided (optional home details, description/images/home ownership contract).
+    - **Submit Claims:** Ask if they want to file a claim, process the claim as soon as the damage amount is provided (optional gather accident info, description, police reports, photos).
     Always answer in this format precisely (no prefix or suffix to this):
     { "text": "response", "toolCall": { "name": "tool", "arguments": [args] } }
     If no tool is used, "toolCall" is null.
 
     Tools:
-    - **buyInsurance:** Parameters: depositAmountUSD (positive number), securedAmountUSD (positive number)
+    - **buyInsurance:** Parameters: coverageAmountUSD (positive number)
     - **claimInsurance:** Parameters: claimDescription (non-empty string), claimAmount (positive number)
-    - **createDocument:** Parameters: title (string), kind (enum)
-    - **updateDocument:** Parameters: id (string), description (string)
-    `
+`
 
     // Log the prompt details for debugging.
     console.log("Sending request to generation API with prompt:", prompt)
