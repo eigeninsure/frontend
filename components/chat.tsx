@@ -67,6 +67,10 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
             if (aiResponse.toolCall.name === 'buyInsurance') {
               const amount = aiResponse.toolCall.arguments[0]
               window.alert(`Processing home insurance coverage for $${amount}...`)
+            } else if (aiResponse.toolCall.name === 'claimInsurance') {
+              const description = aiResponse.toolCall.arguments[0]
+              const amount = aiResponse.toolCall.arguments[1]
+              window.alert(`Processing home insurance claim for $${amount} with description: ${description}...`)
             }
           }
         } catch (error) {
