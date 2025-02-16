@@ -28,7 +28,7 @@ export function ChatHeader({ address }: ChatHeaderProps) {
             router.refresh();
           }}
         >
-          New Chat
+          New Case
         </Button>
       </div>
 

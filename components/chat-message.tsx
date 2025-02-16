@@ -8,17 +8,27 @@ import { cn } from '@/lib/utils'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 
-// Add this utility function to parse JSON messages
-function parseMessageContent(content: string): string {
+interface FileAttachment {
+  type: 'pdf' | 'image'
+  content: string
+  name: string
+}
+
+interface ParsedContent {
+  text: string
+  attachments?: FileAttachment[]
+}
+
+function parseMessageContent(content: string): ParsedContent {
   try {
     const parsed = JSON.parse(content)
-    if (parsed && typeof parsed.text === 'string') {
-      return parsed.text
+    return {
+      text: parsed.text,
+      attachments: parsed.attachments
     }
   } catch (e) {
-    // If parsing fails, return the original content
+    return { text: content }
   }
-  return content
 }
 
 export interface ChatMessageProps {
@@ -26,6 +36,8 @@ export interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
+  const { text, attachments } = parseMessageContent(message.content)
+  
   return (
     <div
       className={cn('group relative mb-4 flex items-start md:-ml-12')}
@@ -81,9 +93,39 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             }
           }}
         >
-          {parseMessageContent(message.content)}
+          {text}
         </MemoizedReactMarkdown>
+        
+        {attachments && attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {attachments.map((file, index) => (
+              <div key={index} className="flex items-center gap-1 bg-gray-100 rounded px-2 py-1">
+                {/* <IconFile className="h-4 w-4" /> */}
+                <span className="text-sm">{file.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        
         <ChatMessageActions message={message} />
+      </div>
+    </div>
+  )
+}
+
+export function ChatMessageLoading() {
+  return (
+    <div className="group relative mb-4 flex items-start md:-ml-12">
+      <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow bg-primary text-primary-foreground">
+        <IconOpenAI />
+      </div>
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+        <div className="animate-pulse flex space-x-4">
+          <div className="flex-1 space-y-3">
+            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
       </div>
     </div>
   )

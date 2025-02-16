@@ -1,13 +1,14 @@
 import { type Message } from 'ai'
 
 import { Separator } from '@/components/ui/separator'
-import { ChatMessage } from '@/components/chat-message'
+import { ChatMessage, ChatMessageLoading } from '@/components/chat-message'
 
 export interface ChatList {
   messages: Message[]
+  isLoading?: boolean
 }
 
-export function ChatList({ messages }: ChatList) {
+export function ChatList({ messages, isLoading }: ChatList) {
   if (!messages.length) {
     return null
   }
@@ -22,6 +23,7 @@ export function ChatList({ messages }: ChatList) {
           )}
         </div>
       ))}
+      {isLoading && <ChatMessageLoading />}
     </div>
   )
 }
