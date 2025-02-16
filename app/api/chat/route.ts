@@ -1,20 +1,15 @@
 import 'server-only'
-
-import { Database } from '@/lib/db_types'
-import { StreamingTextResponse } from 'ai'
-import { auth } from '@/auth'
+import {StreamingTextResponse } from 'ai'
+import { Configuration, OpenAIApi } from 'openai-edge'
 import { cookies } from 'next/headers'
+import { nanoid } from 'nanoid'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { nanoid } from '@/lib/utils'
+import { Database } from '@/lib/db_types'
 
-export const runtime = 'edge'
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY
+})
 
-export async function POST(req: Request) {
-  try {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient<Database>({
-      cookies: () => cookieStore,
-    })
 
     const json = await req.json()
     const { messages, previewToken } = json
@@ -23,6 +18,19 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 })
     }
 
+export async function POST(req: Request) {
+  const cookieStore = cookies()
+  const supabase = createRouteHandlerClient<Database>({
+    cookies: () => cookieStore
+  })
+  const json = await req.json()
+  const { messages, previewToken } = json
+  const session = cookieStore.get('session')
+  const userId = session?.value
+
+  if (!userId) {
+    return new Response('Unauthorized', {
+      status: 401
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
     Flows:
     - **Buy Insurance:** Ask if they want to buy insurance, purchase the insurance as soon as the coverage amount / home value is provided (optional home details, description/images/home ownership contract).
