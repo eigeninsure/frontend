@@ -2,7 +2,7 @@ import { type Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
-import { getChat } from '@/app/actions'
+import { getChat, getUserFromSession } from '@/app/actions'
 import { Chat } from '@/components/chat'
 import { cookies } from 'next/headers'
 
@@ -32,10 +32,9 @@ export async function generateMetadata({
 }
 
 export default async function ChatPage({ params }: ChatPageProps) {
-  const cookieStore = cookies()
-  const session = cookieStore.get('session')
+  const user = await getUserFromSession()
 
-  if (!session?.value) {
+  if (!user) {
     redirect(`/sign-in?next=/chat/${params.id}`)
   }
 
@@ -45,7 +44,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
     notFound()
   }
 
-  if (chat?.userId !== session.value) {
+  if (chat?.userId !== user.address) {
     notFound()
   }
 

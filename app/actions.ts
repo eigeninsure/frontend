@@ -111,3 +111,9 @@ export async function shareChat(chat: Chat) {
 
   return payload
 }
+
+export async function getUserFromSession() {
+  const cookieStore = cookies()
+  const session = cookieStore.get('session')
+  return session?.value ? { address: session.value } : null
+}
