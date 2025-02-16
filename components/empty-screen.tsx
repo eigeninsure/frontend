@@ -18,15 +18,17 @@ const exampleMessages = [
 
 export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
   return (
-    <div className="mx-auto max-w-2xl px-4 bottom-0 sticky">
-        <div className="w-full  flex flex-row items-start gap-4 justify-between">
+    <div className="mx-auto max-w-2xl px-0 bottom-0 sticky mt-2">
+      <div className='flex flex-row items-center w-full'>
+        <div className="w-auto w-full flex flex-col items-start gap-4">
           {exampleMessages.map((message, index) => (
-            <Card key={index} className="cursor-pointer w-1/2" onClick={() => setInput(message.message)}>
+            <Card key={index} className="cursor-pointer w-full" onClick={() => setInput(message.message)}>
               <CardHeader>
                 <p className='text-md'>{message.heading}</p>
               </CardHeader>
             </Card>
           ))}
+        </div>
         </div>
     </div>
   )
