@@ -50,8 +50,10 @@ export async function POST(req: Request) {
 
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
     Flows:
-    - **Buy Insurance:** Ask if they want to buy insurance, purchase the insurance as soon as the coverage amount / home value is provided (optional home details, description/images/home ownership contract).
+    - **Buy Insurance:** Ask if they want to buy insurance, purchase the insurance as soon as the coverage amount / home value is provided (optional home details, description/images/home ownership contract). 
     - **Submit Claims:** Ask if they want to file a claim, process the claim as soon as the damage amount is provided (optional gather accident info, description, police reports, photos).
+    Do not ask follow up questions if they provide the coverage amount or damage amount. Process the insurance claim or purchase right away.
+    
     Always answer in this format precisely (no prefix or suffix to this):
     { "text": "response", "toolCall": { "name": "tool", "arguments": [args] } }
     If no tool is used, "toolCall" is null.
