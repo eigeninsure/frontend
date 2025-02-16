@@ -13,7 +13,7 @@ export function ChatList({ messages, isLoading }: ChatList) {
   
   if (!messages.length && isLoading) {
     return (
-      <div className=" mx-auto max-w-2xl px-4">
+      <div className="mx-auto max-w-2xl px-4">
         <ChatMessageLoading />
       </div>
     )
@@ -24,7 +24,7 @@ export function ChatList({ messages, isLoading }: ChatList) {
   }
 
   return (
-    <div className=" mx-auto max-w-full px-4">
+    <div className="mx-auto w-full px-4 overflow-y-auto">
       {messages.map((message, index) => (
         <div key={index}>
           <ChatMessage message={message} />

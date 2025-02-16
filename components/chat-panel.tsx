@@ -31,9 +31,9 @@ export function ChatPanel({
   messages
 }: ChatPanelProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 mb-10">
+    <div className="w-full bg-white pb-[8px]">
       <ButtonScrollToBottom />
-      <div className="mx-auto sm:max-w-2xl sm:px-4">
+      <div className="mx-auto">
         <div className="flex h-10 items-center justify-center">
           {isLoading ? (
             <Button
@@ -57,7 +57,7 @@ export function ChatPanel({
             )
           )}
         </div>
-        <div className=" space-y-4 px-4 py-1 sm:rounded-xl bg-white shadow-sm border-1.5 sm:border md:py-2">
+        <div className="space-y-4 border-t bg-white shadow-sm">
           <PromptForm
             onSubmit={async (value: string, attachments: File[]) => {
               await append({

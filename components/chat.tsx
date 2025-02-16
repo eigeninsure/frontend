@@ -353,41 +353,40 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
     })
 
   return (
-    <div className='flex flex-row h-full w-4/5 mx-auto'>
-    <div className={cn('flex flex-col h-full w-full ', className)}>
+    <div className='flex flex-row h-screen w-4/5 mx-auto py-4 overflow-hidden'>
+      <div className={cn('flex flex-col h-full w-full space-y-4 relative', className)}>
+        <div className='flex-none'>
+          <h2 className="text-lg font-semibold mb-2">Documents</h2>
+          <DocumentPanel 
+            documents={documents}
+            onUpload={handleDocumentUpload}
+          />
+        </div>
+        
+        <div className='flex-1 min-h-0 flex flex-col'>
+          <h2 className="text-lg font-semibold mb-4 flex-none">Assistant</h2>
+          <div className='flex-1 overflow-y-auto min-h-0'>
+            {messages.length === 0 ? (
+              <EmptyScreen setInput={setInput} />
+            ) : (
+              <ChatList messages={messages} isLoading={isLoading} />
+            )}
+          </div>
+        </div>
 
-<div className='my-4'>
-<h2 className="text-lg font-semibold mb-0">Documents</h2>
-<DocumentPanel 
-        documents={documents}
-        onUpload={handleDocumentUpload}
-      />
-</div>
-    
-<div className='my-4 w-full'>
-
-<h2 className="text-lg font-semibold mb-4">Assistant</h2>
-
-    {messages.length == 0 ? (
-      <EmptyScreen setInput={setInput} />
-    ) : (
-      
-      <ChatList messages={messages} isLoading={isLoading} />
-      )}
-      <ChatPanel
-        id={id}
-        isLoading={isLoading}
-        stop={stop}
-        append={append}
-        reload={reload}
-        messages={messages}
-        input={input}
-        setInput={setInput}
-      />
-    </div>
-    </div>
-
-      
+        <div className='flex-none'>
+          <ChatPanel
+            id={id}
+            isLoading={isLoading}
+            stop={stop}
+            append={append}
+            reload={reload}
+            messages={messages}
+            input={input}
+            setInput={setInput}
+          />
+        </div>
+      </div>
     </div>
   )
 }
