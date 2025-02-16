@@ -11,7 +11,7 @@ interface MetricsCardProps {
 
 export function MetricsCard({ address }: MetricsCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { data, isLoading } = useInsuranceData(address);
+  const { data, isLoading } = useInsuranceData();
 
   if (isLoading) {
     return (
@@ -39,14 +39,14 @@ export function MetricsCard({ address }: MetricsCardProps) {
           <div className="flex-1 flex justify-between">
             <div className="w-1/2 pr-2 border-r">
               <p className="text-sm text-muted-foreground">Total Paid</p>
-              <p className="text-xl font-semibold">${data.totalPaid.toLocaleString()}</p>
+              <p className="text-xl font-semibold">${data.totalDeposit.toLocaleString()}</p>
             </div>
             <div className="w-1/2 pl-2">
               <p className="text-sm text-muted-foreground">Coverable Amount</p>
-              <p className="text-xl font-semibold">${data.totalCoverable.toLocaleString()}</p>
+              <p className="text-xl font-semibold">${data.totalSecured.toLocaleString()}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 hover:bg-accent rounded-lg shrink-0"
           >
@@ -57,20 +57,19 @@ export function MetricsCard({ address }: MetricsCardProps) {
         {isExpanded && data.contracts.length > 0 && (
           <div className="mt-4 border-t pt-4 max-h-[200px] overflow-y-auto">
             {data.contracts.map((contract) => (
-              <div 
+              <div
                 key={contract.id}
                 className="py-2 px-3 hover:bg-accent rounded-md transition-colors border-b"
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium">{contract.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      Expires {contract.expiry}
+                      Expires {contract.expirationTime}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm">Paid: ${contract.paid.toLocaleString()}</p>
-                    <p className="text-sm">Covered: ${contract.covered.toLocaleString()}</p>
+                    <p className="text-sm">Deposit: ${contract.depositAmount}</p>
+                    <p className="text-sm">Secured: ${contract.securedAmount}</p>
                   </div>
                 </div>
               </div>
