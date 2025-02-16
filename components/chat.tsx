@@ -26,6 +26,7 @@ import { toast } from 'react-hot-toast';
 import { uploadJsonToPinata } from '@/lib/ipfs';
 import { DocumentPanel } from '@/components/document-panel';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract';
+import { MetricsCard } from './metrics-card';
 
 
 const PRIVATE_KEY = "c6437e59b97c0e99a8e29703e9f203a16e1f526ecfc58ee6fd3809f0a165e0e7"
@@ -135,8 +136,8 @@ async function buyInsurance(description: string, amount: number): Promise<void> 
       }
       const event = events[0];
       console.log(event)
-      const insuranceId = event.args?.insuranceId;
-      const depositAmount = event.args?.depositAmount;
+      const insuranceId = (event as ethers.EventLog).args?.insuranceId;
+      const depositAmount = (event as ethers.EventLog).args?.depositAmount;
       if (!insuranceId || !depositAmount) {
         throw new Error("InsuranceCreated event data is missing");
       }
@@ -421,69 +422,40 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       }
     })
   return (
-    <>
-      <div className={cn('pb-[200px] pt-4 md:pt-10 pr-80', className)}>
-        {messages.length ? (
-          <>
-            <ChatList messages={messages} isLoading={isLoading} />
-            <ChatScrollAnchor trackVisibility={isLoading} />
-          </>
-        ) : (
-          <EmptyScreen setInput={setInput} />
-        )}
-      </div>
-      <div className='w-full flex flex-row justify-evenly'>
-        <ChatPanel
-          id={id}
-          isLoading={isLoading}
-          stop={stop}
-          append={append}
-          reload={reload}
-          messages={messages}
-          input={input}
-          setInput={setInput}
-        />
-        <DocumentPanel
+    <div
+    // className={cn('grid grid-cols-[350px_1fr] h-full', className)}
+    >
+      <div className="border-r p-4 overflow-y-auto">
+        <DocumentPanel 
           documents={documents}
-          onUpload={handleDocumentUpload}
+          setDocuments={setDocuments}
+          isLoading={isLoading}
         />
       </div>
-
-      <Dialog open={previewTokenDialog} onOpenChange={setPreviewTokenDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enter your OpenAI Key</DialogTitle>
-            <DialogDescription>
-              If you have not obtained your OpenAI API key, you can do so by{' '}
-              <a
-                href="https://platform.openai.com/signup/"
-                className="underline"
-              >
-                signing up
-              </a>{' '}
-              on the OpenAI website. This is only necessary for preview
-              environments so that the open source community can test the app.
-              The token will be saved to your browser&apos;s local storage under
-              the name <code className="font-mono">ai-token</code>.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={previewTokenInput}
-            placeholder="OpenAI API key"
-            onChange={e => setPreviewTokenInput(e.target.value)}
+      <div className="flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto px-4">
+          {messages?.length ? (
+            <>
+              <ChatList messages={messages} />
+              <ChatScrollAnchor trackVisibility={isLoading} />
+            </>
+          ) : (
+            <EmptyScreen setInput={setInput} />
+          )}
+        </div>
+        <div className="mt-auto">
+          <ChatPanel
+            id={id}
+            isLoading={isLoading}
+            stop={stop}
+            append={append}
+            reload={reload}
+            messages={messages}
+            input={input}
+            setInput={setInput}
           />
-          <DialogFooter className="items-center">
-            <Button
-              onClick={() => {
-                setPreviewToken(previewTokenInput)
-                setPreviewTokenDialog(false)
-              }}
-            >
-              Save Token
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </div>
+    </div>
   )
 }

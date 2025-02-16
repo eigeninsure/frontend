@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { insurancePoolABI } from '@/lib/contracts';
+import { CONTRACT_ABI } from '@/lib/contract';
 
 interface InsuranceData {
   totalPaid: number;
@@ -30,7 +30,7 @@ export function useInsuranceData(address?: string) {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(
           process.env.NEXT_PUBLIC_INSURANCE_POOL_ADDRESS!,
-          insurancePoolABI,
+          CONTRACT_ABI,
           provider
         );
 

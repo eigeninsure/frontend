@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
-import { useInsuranceData } from '@/hooks/use-insurance-data';
+import { useInsuranceData } from '@/app/hooks/use-insurance-data';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface MetricsCardProps {
@@ -15,15 +15,15 @@ export function MetricsCard({ address }: MetricsCardProps) {
 
   if (isLoading) {
     return (
-      <div className="border rounded-lg bg-background shadow-sm mx-auto mb-4 max-w-3xl w-full md:mx-auto p-4">
+      <div className="border rounded-lg bg-background shadow-sm w-full p-4">
         <div className="flex justify-between items-center gap-4">
           <div className="flex-1 flex justify-between">
             <div className="w-1/2 pr-2 border-r">
-              <p className="text-sm text-muted-foreground">Total Paid</p>
+              <p className="text-sm text-muted-foreground">Total Deposit</p>
               <Skeleton className="h-8 w-24" />
             </div>
             <div className="w-1/2 pl-2">
-              <p className="text-sm text-muted-foreground">Coverable Amount</p>
+              <p className="text-sm text-muted-foreground">Total Coverable</p>
               <Skeleton className="h-8 w-24" />
             </div>
           </div>
@@ -33,7 +33,7 @@ export function MetricsCard({ address }: MetricsCardProps) {
   }
 
   return (
-    <div className="border rounded-lg bg-background shadow-sm mx-auto mb-4 max-w-3xl w-full md:mx-auto">
+    <div className="border rounded-lg bg-background shadow-sm w-full">
       <div className="p-4">
         <div className="flex justify-between items-center gap-4">
           <div className="flex-1 flex justify-between">
@@ -55,7 +55,7 @@ export function MetricsCard({ address }: MetricsCardProps) {
         </div>
 
         {isExpanded && data.contracts.length > 0 && (
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-4 border-t pt-4 max-h-[200px] overflow-y-auto">
             {data.contracts.map((contract) => (
               <div 
                 key={contract.id}

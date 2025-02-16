@@ -48,7 +48,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <Toaster />
         <Header  />
         <Providers attribute="class" defaultTheme="light" enableSystem>
-          <div className="flex min-h-screen flex-col center-center justify-center">
+          <div className="flex max-h-screen flex-col center-center justify-center overflow-hidden">
             <main className="flex flex-1 flex-col ">{children}</main>
           </div>
           <TailwindIndicator />
