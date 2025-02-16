@@ -71,6 +71,11 @@ export async function POST(req: Request) {
     }
     const text = result.text
 
+    const responseText = JSON.stringify({
+      text: result.text,
+      toolCall: result.toolCall
+    })
+
     // Save the completed chat to the database.
     const title = text.substring(0, 100)
     const id = json.id ?? nanoid()
@@ -101,7 +106,7 @@ export async function POST(req: Request) {
           // Wait briefly to simulate streaming.
           await new Promise(resolve => setTimeout(resolve, 50))
           // Enqueue the full text.
-          controller.enqueue(encoder.encode(text))
+          controller.enqueue(encoder.encode(responseText))
           controller.close()
         } catch (err) {
           console.error("Streaming error:", err)
