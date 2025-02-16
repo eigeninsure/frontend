@@ -3,8 +3,10 @@ import { Metadata } from 'next'
 import { Toaster } from 'react-hot-toast'
 import { cookies } from 'next/headers'
 
+import { GeistSans } from "geist/font/sans";
+
 import '@/app/globals.css'
-import { fontMono, fontSans } from '@/lib/fonts'
+// import { fontMono, fontSans } from '@/lib/fonts'
 import { cn } from '@/lib/utils'
 import { TailwindIndicator } from '@/components/tailwind-indicator'
 import { Providers } from '@/components/providers'
@@ -36,20 +38,18 @@ export default function RootLayout({ children }: RootLayoutProps) {
   const session = cookies().get('session')
   
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={GeistSans.className}>
       <head />
       <body
-        className={cn(
-          'font-sans antialiased',
-          fontSans.variable,
-          fontMono.variable
-        )}
+        // className={cn(
+        //   'font-sans antialiased',
+        // )}
       >
         <Toaster />
         <Header  />
-        <Providers attribute="class" defaultTheme="system" enableSystem>
+        <Providers attribute="class" defaultTheme="light" enableSystem>
           <div className="flex min-h-screen flex-col center-center justify-center">
-            <main className="flex flex-1 flex-col bg-muted/50">{children}</main>
+            <main className="flex flex-1 flex-col ">{children}</main>
           </div>
           <TailwindIndicator />
         </Providers>

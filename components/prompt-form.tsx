@@ -14,10 +14,11 @@ import {
 import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
 import { ArrowUp } from 'lucide-react'
 
-export interface PromptProps
-  extends Pick<UseChatHelpers, 'input' | 'setInput'> {
-  onSubmit: (value: string) => Promise<void>
-  isLoading: boolean
+interface PromptFormProps {
+  onSubmit: (value: string, attachments: File[]) => Promise<void>
+  input?: string
+  setInput: (value: string) => void
+  isLoading?: boolean
 }
 
 export function PromptForm({
@@ -25,7 +26,7 @@ export function PromptForm({
   input,
   setInput,
   isLoading
-}: PromptProps) {
+}: PromptFormProps) {
   const { formRef, onKeyDown } = useEnterSubmit()
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -37,11 +38,11 @@ export function PromptForm({
           return
         }
         setInput('')
-        await onSubmit(input)
+        await onSubmit(input, [])
       }}
       ref={formRef}
     >
-      <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:px-12">
+      <div className="flex flex-row justify-between">
         <Textarea
           ref={inputRef}
           tabIndex={0}
@@ -51,14 +52,16 @@ export function PromptForm({
           onChange={e => setInput(e.target.value)}
           placeholder="Send a message."
           spellCheck={false}
-          className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
+          className=" align-middle min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
         />
-        <div className="absolute right-0 top-4 sm:right-4">
-          <Button type="submit" size="icon" className='rounded-full cursor-pointer hover:rounded-xl transition-all duration-300' disabled={isLoading}>
-            <ArrowUp />
-            <span className="sr-only">Send message</span>
+        <div className='flex flex-col justify-center'>
+          <Button type="submit" size='icon'  className='align-middle justify-end rounded-full cursor-pointer hover:rounded-xl transition-all duration-300' disabled={isLoading}>
+            <div>
+            <ArrowUp width={20} height={20} className='mr-1.5' />
+            {/* <span className="sr-only">Send message</span> */}
+            </div>
           </Button>
-        </div>
+          </div>
       </div>
     </form>
   )
