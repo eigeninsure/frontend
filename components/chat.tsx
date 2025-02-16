@@ -21,6 +21,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
 import {uploadJsonToPinata} from '@/lib/ipfs'
+import { DocumentPanel } from '@/components/document-panel'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -45,6 +46,42 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   )
   const [previewTokenDialog, setPreviewTokenDialog] = useState(IS_PREVIEW)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
+  const [documents, setDocuments] = useState<Array<{
+    id: string
+    type: 'pdf' | 'image'
+    name: string
+    preview: string
+    ipfsHash: string
+  }>>([])
+
+  const handleDocumentUpload = async (file: File, preview: string, type: 'pdf' | 'image') => {
+    try {
+      const content = await file.arrayBuffer()
+      const base64Content = Buffer.from(content).toString('base64')
+      
+      const jsonData = {
+        name: file.name,
+        type,
+        content: base64Content
+      }
+      
+      const ipfsHash = await uploadJsonToPinata(jsonData)
+      
+      setDocuments(prev => [...prev, {
+        id: Math.random().toString(36).substring(7),
+        type,
+        name: file.name,
+        preview,
+        ipfsHash
+      }])
+
+      toast.success(`File uploaded to IPFS: ${ipfsHash}`)
+    } catch (error) {
+      console.error('Failed to upload to IPFS:', error)
+      toast.error('Failed to upload file')
+    }
+  }
+
   const { messages, append, reload, stop, isLoading, input, setInput } =
     useChat({
       initialMessages,
@@ -115,10 +152,10 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
     })
   return (
     <>
-      <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
+      <div className={cn('pb-[200px] pt-4 md:pt-10 pr-80', className)}>
         {messages.length ? (
           <>
-            <ChatList messages={messages} />
+            <ChatList messages={messages} isLoading={isLoading} />
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
@@ -135,7 +172,11 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         input={input}
         setInput={setInput}
       />
-
+      <DocumentPanel 
+        documents={documents}
+        onUpload={handleDocumentUpload}
+      />
+      
       <Dialog open={previewTokenDialog} onOpenChange={setPreviewTokenDialog}>
         <DialogContent>
           <DialogHeader>

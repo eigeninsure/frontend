@@ -34,7 +34,7 @@ export async function Header() {
             <Button variant="ghost" asChild>
               <Link href="/">
                 <PlusIcon className="mr-2" />
-                New Chat
+                New Case
               </Link>
             </Button>
           </>
