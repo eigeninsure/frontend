@@ -354,8 +354,15 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
 
   return (
     <div className='flex flex-row h-full w-4/5 mx-auto'>
-    <div className={cn('flex flex-col h-full w-full', className)}>
+    <div className={cn('flex flex-col h-full w-full mt-4', className)}>
+    <h2 className="text-lg font-semibold mb-4">Assistant</h2>
+
+    {messages.length == 0 ? (
+      <EmptyScreen setInput={setInput} />
+    ) : (
+      
       <ChatList messages={messages} isLoading={isLoading} />
+      )}
       <ChatPanel
         id={id}
         isLoading={isLoading}
