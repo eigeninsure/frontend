@@ -42,7 +42,8 @@ export function DocumentPanel({ documents, onUpload }: DocumentPanelProps) {
   }
 
   return (
-    <div className="fixed right-0 top-20 w-1/3 h-full p-4 overflow-y-auto">
+    <div className='flex w-full'>
+    <div className=" right-0 top-20 w-full h-full p-4 overflow-y-auto">
       <h2 className="text-lg font-semibold mb-4">Documents</h2>
       
       <input
@@ -83,6 +84,7 @@ export function DocumentPanel({ documents, onUpload }: DocumentPanelProps) {
           <IconPlus className="h-8 w-8 text-gray-400" />
         </div>
       </div>
+    </div>
     </div>
   )
 } 

@@ -422,17 +422,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       }
     })
   return (
-    <div
-    // className={cn('grid grid-cols-[350px_1fr] h-full', className)}
-    >
-      <div className="border-r p-4 overflow-y-auto">
-        <DocumentPanel 
-          documents={documents}
-          setDocuments={setDocuments}
-          isLoading={isLoading}
-        />
-      </div>
-      <div className="flex flex-col h-full">
+    <div className='flex h-4/5 flex-row w-full justify-evenly'>
+      <div className="flex flex-col h-full w-2/3">
         <div className="flex-1 overflow-y-auto px-4">
           {messages?.length ? (
             <>
@@ -443,7 +434,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
             <EmptyScreen setInput={setInput} />
           )}
         </div>
-        <div className="mt-auto">
+        <div className="h-1/2 max-h-[50%] overflow-y-auto border-t">
           <ChatPanel
             id={id}
             isLoading={isLoading}
@@ -455,6 +446,13 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
             setInput={setInput}
           />
         </div>
+      </div>
+      <div className="border-r p-4 overflow-y-auto w-1/3">
+        <DocumentPanel 
+          documents={documents}
+          onUpload={handleDocumentUpload}
+          // isLoading={isLoading}
+        />
       </div>
     </div>
   )
