@@ -26,65 +26,66 @@ export function DocumentPanel({ documents, onUpload }: DocumentPanelProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    
-    for (const file of files) {
-      const reader = new FileReader()
-      
-      reader.onload = async (e) => {
-        const preview = e.target?.result as string
-        const type = file.type.startsWith('image/') ? 'image' : 'pdf'
-        await onUpload(file, preview, type)
-      }
-      
-      reader.readAsDataURL(file)
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const preview = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.readAsDataURL(file)
+      })
+
+      const type = file.type.startsWith('application/pdf') ? 'pdf' : 'image'
+      await onUpload(file, preview, type)
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      toast.error('Failed to upload file')
     }
   }
 
   return (
-    <div className='flex w-full'>
-    <div className=" right-0 top-20 w-full h-full p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold mb-4">Documents</h2>
-      
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        multiple
-        accept="application/pdf,image/*"
-        className="hidden"
-      />
-      
-      <div className="grid grid-cols-2 gap-2">
-        {documents.map(doc => (
+    <div className="w-full overflow-x-auto">
+      <div className="flex flex-row gap-4 p-4 min-w-max">
+        <Button
+          variant="outline"
+          className="shrink-0 h-32 w-24 flex flex-col items-center justify-center gap-2"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <IconPlus />
+          <span className="text-xs">Add File</span>
+        </Button>
+        
+        {documents.map((doc) => (
           <div
             key={doc.id}
-            className="relative group border rounded-lg overflow-hidden h-32"
+            className="shrink-0 h-32 w-24 border rounded-lg overflow-hidden flex flex-col"
           >
-            {doc.type === 'image' ? (
+            {doc.type === 'pdf' ? (
+              <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                <span className="text-sm font-medium">PDF</span>
+              </div>
+            ) : (
               <img
                 src={doc.preview}
                 alt={doc.name}
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
-            ) : (
-              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                PDF
-              </div>
             )}
-            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-1 text-xs truncate">
+            <div className="p-2 text-xs truncate bg-white border-t">
               {doc.name}
             </div>
           </div>
         ))}
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="h-32 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-        >
-          <IconPlus className="h-8 w-8 text-gray-400" />
-        </div>
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,application/pdf"
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </div>
-    </div>
     </div>
   )
 } 

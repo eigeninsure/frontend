@@ -13,14 +13,22 @@ const exampleMessages = [
   {
     heading: 'Make a claim',
     message: `I want to make a claim.`
-  }
+  },
+  // {
+  //   heading: 'Purchase an insurance',
+  //   message: 'I want to purchase an insurance.'
+  // },
+  // {
+  //   heading: 'Make a claim',
+  //   message: `I want to make a claim.`
+  // }
 ]
 
 export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
   return (
-    <div className="mx-auto max-w-2xl px-0 bottom-0 sticky mt-2">
-      <div className='flex flex-row items-center w-full'>
-        <div className="w-auto w-full flex flex-col items-start gap-4">
+    <div className="flex flex-col items-center h-full">
+      <div className="fixed bottom-32 left-0 right-0 mx-auto w-full max-w-2xl px-4">
+        <div className="w-full flex flex-row items-start gap-4">
           {exampleMessages.map((message, index) => (
             <Card key={index} className="cursor-pointer w-full" onClick={() => setInput(message.message)}>
               <CardHeader>
@@ -29,7 +37,7 @@ export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
             </Card>
           ))}
         </div>
-        </div>
+      </div>
     </div>
   )
 }

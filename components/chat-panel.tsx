@@ -57,7 +57,7 @@ export function ChatPanel({
             )
           )}
         </div>
-        <div className="bg-red space-y-4 px-4 py-1 sm:rounded-xl bg-white shadow-sm border-1.5 sm:border md:py-2">
+        <div className=" space-y-4 px-4 py-1 sm:rounded-xl bg-white shadow-sm border-1.5 sm:border md:py-2">
           <PromptForm
             onSubmit={async (value: string, attachments: File[]) => {
               await append({
