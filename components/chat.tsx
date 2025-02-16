@@ -40,6 +40,39 @@ interface AIResponse {
   toolCall: ToolCall | null
 }
 
+interface ApprovalResponse {
+  status: 'pending' | 'completed';
+  approvalRate?: number;
+  message?: string;
+}
+
+async function pollClaimApproval(ipfsHash: string): Promise<ApprovalResponse> {
+  const response = await fetch(`http://10.32.86.7:4000/api/claims/${ipfsHash}/approval-rate`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+}
+
+async function pollUntilComplete(ipfsHash: string, maxAttempts = 10): Promise<ApprovalResponse> {
+  let attempts = 0;
+  
+  while (attempts < maxAttempts) {
+    const result = await pollClaimApproval(ipfsHash);
+    console.log('Poll attempt', attempts + 1, 'result:', result);
+    
+    if (result.status === 'completed') {
+      return result;
+    }
+    
+    // Wait 2 seconds before next poll
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    attempts++;
+  }
+  
+  throw new Error('Polling timed out');
+}
+
 export function Chat({ id, initialMessages, className }: ChatProps) {
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
     'ai-token',
@@ -91,17 +124,17 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               const description = aiResponse.toolCall.arguments[0]
               const amount = aiResponse.toolCall.arguments[1]
 
-              const jsonData = {
-                name: "EigenInsure Insurance Claim",
-                description,
-                amount
-              }
-              const ipfsHash = await uploadJsonToPinata(jsonData);
-
-              window.alert(`Processing home insurance claim for $${amount} with description: ${description}. IPFS ${ipfsHash}`)
-
-              // Call AVS create task function with IPFS hash
               try {
+                // Upload to IPFS
+                const jsonData = {
+                  name: "EigenInsure Insurance Claim",
+                  description,
+                  amount
+                }
+                const ipfsHash = await uploadJsonToPinata(jsonData);
+                window.alert(`Processing home insurance claim for $${amount}. IPFS: ${ipfsHash}`);
+
+                // Create task
                 const taskResponse = await fetch(AVS_API_ENDPOINT, {
                   method: 'POST',
                   headers: {
@@ -119,17 +152,31 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
 
                 const taskResult = await taskResponse.json();
                 console.log('Task created:', taskResult);
-                window.alert(`Claim task created. Task ID: ${taskResult.taskId}`);
+                window.alert(`Claim task created. Waiting for approval...`);
 
-                // TODO: Store taskId for polling
-                // const taskId = taskResult.taskId;
+                // Poll for approval
+                try {
+                  const approvalResult = await pollUntilComplete(ipfsHash);
+                  console.log('Final approval result:', approvalResult);
+                  
+                  if (approvalResult.approvalRate && approvalResult.approvalRate >= 50) {
+                    window.alert(`Claim approved with ${approvalResult.approvalRate}% approval rate! Processing reimbursement...`);
+                    // TODO: Call reimbursement function
+                    // await reimburse(amount, wallet.address, lastInsuranceId);
+                  } else {
+                    window.alert(`Claim denied. Approval rate: ${approvalResult.approvalRate}%`);
+                  }
+                } catch (error) {
+                  console.error('Error polling claim status:', error);
+                  window.alert('Failed to get claim approval status. Please check back later.');
+                }
 
               } catch (error: unknown) {
-                console.error('Error creating task:', error);
+                console.error('Error processing claim:', error);
                 if (error instanceof Error) {
-                  window.alert(`Failed to create claim task: ${error.message}`);
+                  window.alert(`Failed to process claim: ${error.message}`);
                 } else {
-                  window.alert('Failed to create claim task: Unknown error occurred');
+                  window.alert('Failed to process claim: Unknown error occurred');
                 }
               }
 
