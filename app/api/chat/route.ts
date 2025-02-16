@@ -1,8 +1,9 @@
 import 'server-only'
-import { StreamingTextResponse } from 'ai'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+
 import { Database } from '@/lib/db_types'
+import { StreamingTextResponse } from 'ai'
+import { cookies } from 'next/headers'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
@@ -47,35 +48,30 @@ export async function POST(req: Request) {
 
     const fullPrompt = attachmentContext ? `${prompt}\n\nContext from attachments:\n${attachmentContext}` : prompt;
 
-    const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for car insurance via EigenLayer and Metamask. Introduce yourself and guide users.
+    const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
     Flows:
-    - **New Insurance:** Ask if they want to buy insurance, get car details (description/images) to compute premium & coverage, then confirm.
-    - **Claims:** Ask if they want to file a claim, gather accident info (description, reports, photos) and process the claim.
-
-    For code/content >10 lines, use artifacts.
-
+    - **Buy Insurance:** Ask if they want to buy insurance, purchase the insurance as soon as the coverage amount / home value is provided (optional home details, description/images/home ownership contract).
+    - **Submit Claims:** Ask if they want to file a claim, process the claim as soon as the damage amount is provided (optional gather accident info, description, police reports, photos).
     Always answer in this format precisely (no prefix or suffix to this):
     { "text": "response", "toolCall": { "name": "tool", "arguments": [args] } }
     If no tool is used, "toolCall" is null.
 
     Tools:
-    - **buyInsurance:** Parameters: depositAmountUSD (positive number), securedAmountUSD (positive number)
+    - **buyInsurance:** Parameters: coverageAmountUSD (positive number)
     - **claimInsurance:** Parameters: claimDescription (non-empty string), claimAmount (positive number)
-    - **createDocument:** Parameters: title (string), kind (enum)
-    - **updateDocument:** Parameters: id (string), description (string)
-    `
+`
 
-    // Log the prompt details for debugging.
-    console.log("Sending request to generation API with prompt:", fullPrompt)
+    // Log the full message history for debugging
+    console.log("Sending request to generation API with messages:", messages)
 
-    // Call your custom API endpoint.
+    // Call your custom API endpoint with full message history
     const apiResponse = await fetch("http://localhost:8000/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ 
-        messages: [fullPrompt], 
+        messages: messages,  // Send the entire message history
         system: regularPrompt 
       }),
     })
@@ -95,6 +91,11 @@ export async function POST(req: Request) {
       return new Response("Invalid API response", { status: 500 })
     }
     const text = result.text
+
+    const responseText = JSON.stringify({
+      text: result.text,
+      toolCall: result.toolCall
+    })
 
     // Save the completed chat to the database.
     const title = text.substring(0, 100)
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
           // Wait briefly to simulate streaming.
           await new Promise(resolve => setTimeout(resolve, 50))
           // Enqueue the full text.
-          controller.enqueue(encoder.encode(text))
+          controller.enqueue(encoder.encode(responseText))
           controller.close()
         } catch (err) {
           console.error("Streaming error:", err)
