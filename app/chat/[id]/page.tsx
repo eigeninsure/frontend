@@ -33,9 +33,9 @@ export async function generateMetadata({
 
 export default async function ChatPage({ params }: ChatPageProps) {
   const cookieStore = cookies()
-  const session = await auth({ cookieStore })
+  const session = cookieStore.get('session')
 
-  if (!session?.user) {
+  if (!session?.value) {
     redirect(`/sign-in?next=/chat/${params.id}`)
   }
 
@@ -45,7 +45,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
     notFound()
   }
 
-  if (chat?.userId !== session?.user?.id) {
+  if (chat?.userId !== session.value) {
     notFound()
   }
 

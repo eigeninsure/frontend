@@ -1,14 +1,10 @@
 import 'server-only'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
 import { Configuration, OpenAIApi } from 'openai-edge'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { nanoid } from 'nanoid'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/lib/db_types'
-
-import { auth } from '@/auth'
-import { nanoid } from '@/lib/utils'
-
-export const runtime = 'edge'
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
@@ -23,7 +19,8 @@ export async function POST(req: Request) {
   })
   const json = await req.json()
   const { messages, previewToken } = json
-  const userId = (await auth({ cookieStore }))?.user.id
+  const session = cookieStore.get('session')
+  const userId = session?.value
 
   if (!userId) {
     return new Response('Unauthorized', {

@@ -1,26 +1,16 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
-
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+  const session = req.cookies.get('session')
 
-  // Create a Supabase client configured to use cookies
-  const supabase = createMiddlewareClient({ req, res })
-
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
-  const {
-    data: { session }
-  } = await supabase.auth.getSession()
-
-  // OPTIONAL: this forces users to be logged in to use the chatbot.
-  // If you want to allow anonymous users, simply remove the check below.
   if (
-    !session &&
+    !session?.value &&
     !req.url.includes('/sign-in') &&
-    !req.url.includes('/sign-up')
+    !req.url.includes('/sign-up') &&
+    !req.url.includes('/api/auth/nonce') &&
+    !req.url.includes('/api/auth/login')
   ) {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = '/sign-in'
