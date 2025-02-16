@@ -16,11 +16,11 @@ export async function POST(req: Request) {
     })
 
     const json = await req.json()
-    
+
     const { messages, previewToken } = json
     const session = cookieStore.get('session')
     const userId = session?.value
-    
+
     if (!userId) {
       return new Response('Unauthorized', { status: 401 })
     }
@@ -29,14 +29,14 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1];
     let prompt = lastMessage.content;
     const documents = json.body?.documents || [];
-    
+
     // Add documents context to the prompt
-    const documentsContext = documents.map((doc: any) => 
+    const documentsContext = documents.map((doc: any) =>
       `${doc.type === 'pdf' ? 'PDF' : 'Image'} (${doc.name}): https://gateway.pinata.cloud/ipfs/${doc.ipfsHash}`
     ).join('\n');
 
-    const fullPrompt = documentsContext 
-      ? `${prompt}\n\nRelevant documents:\n${documentsContext}` 
+    const fullPrompt = documentsContext
+      ? `${prompt}\n\nRelevant documents:\n${documentsContext}`
       : prompt;
 
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     Tools:
     - **buyInsurance:** Parameters: [homeDescription (non-empty string), coverageAmountUSD (positive number)]
-    - **claimInsurance:** Parameters: [claimDescription (non-empty string), claimAmount (positive number)]
+    - **claimInsurance:** Parameters: [claimDescription (non-empty string), claimAmount (positive number), insuranceId (positive number)]
 `
 
     // Log the full message history for debugging
@@ -63,9 +63,9 @@ export async function POST(req: Request) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         messages: messages,  // Send the entire message history
-        system: regularPrompt 
+        system: regularPrompt
       }),
     })
 
