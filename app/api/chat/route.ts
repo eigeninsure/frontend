@@ -23,10 +23,10 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for car insurance via EigenLayer and Metamask. Introduce yourself and guide users.
+    const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself and guide users.
     Flows:
-    - **New Insurance:** Ask if they want to buy insurance, get car details (description/images) to compute premium & coverage, then confirm.
-    - **Claims:** Ask if they want to file a claim, gather accident info (description, reports, photos) and process the claim.
+    - **Buy Insurance:** Ask if they want to buy insurance, get coverage amount (optional home details, description/images/home ownership contract) and purchase the insurance.
+    - **Submit Claims:** Ask if they want to file a claim, gather accident info (optional description, reports, photos) and process the claim.
 
     For code/content >10 lines, use artifacts.
 
@@ -35,10 +35,8 @@ export async function POST(req: Request) {
     If no tool is used, "toolCall" is null.
 
     Tools:
-    - **buyInsurance:** Parameters: depositAmountUSD (positive number), securedAmountUSD (positive number)
+    - **buyInsurance:** Parameters: coverageAmountUSD (positive number)
     - **claimInsurance:** Parameters: claimDescription (non-empty string), claimAmount (positive number)
-    - **createDocument:** Parameters: title (string), kind (enum)
-    - **updateDocument:** Parameters: id (string), description (string)
     `
 
     // Log the messages for debugging
