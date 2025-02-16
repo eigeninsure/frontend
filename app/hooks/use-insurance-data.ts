@@ -42,16 +42,17 @@ export function useInsuranceData(address?: string) {
             userInsurances.push(insurance);
             i++;
           } catch (error) {
-            console.error('Error fetching insurance:', error);
             break;
           }
         }
 
+        const ETHPrice = 2600
+
         const filteredInsurances = userInsurances.filter(insurance => insurance[3] && insurance[4]);
         const formattedInsurances = filteredInsurances.map((insurance, index) => ({
           id: index.toString(),
-          depositAmount: Number(insurance[0]),
-          securedAmount: Number(insurance[1]),
+          depositAmount: parseFloat((Number(insurance[0]) * (10 ** -18) * ETHPrice).toFixed(2)),
+          securedAmount: parseFloat((Number(insurance[1]) * (10 ** -18) * ETHPrice).toFixed(2)),
           expirationTime: new Date(Number(insurance[2]) * 1000).toISOString()
         }));
 
