@@ -67,10 +67,19 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
             if (aiResponse.toolCall.name === 'buyInsurance') {
               const amount = aiResponse.toolCall.arguments[0]
               window.alert(`Processing home insurance coverage for $${amount}...`)
+              // TODO: Call buyInsurance smart contract function for coverage amount
             } else if (aiResponse.toolCall.name === 'claimInsurance') {
               const description = aiResponse.toolCall.arguments[0]
               const amount = aiResponse.toolCall.arguments[1]
               window.alert(`Processing home insurance claim for $${amount} with description: ${description}...`)
+              // TODO: Call AVS create task function with amount and description.
+
+              // TODO: Poll AVS until approval rate is finalized
+
+              // If above threshold, trigger reimbursement
+
+              // Else, alert() user about denial of claim.
+
             }
           }
         } catch (error) {

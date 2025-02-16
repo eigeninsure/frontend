@@ -1,12 +1,25 @@
+import { IconOpenAI, IconUser } from '@/components/ui/icons'
+
+import { ChatMessageActions } from '@/components/chat-message-actions'
+import { CodeBlock } from '@/components/ui/codeblock'
+import { MemoizedReactMarkdown } from '@/components/markdown'
 import { Message } from 'ai'
+import { cn } from '@/lib/utils'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 
-import { cn } from '@/lib/utils'
-import { CodeBlock } from '@/components/ui/codeblock'
-import { MemoizedReactMarkdown } from '@/components/markdown'
-import { IconOpenAI, IconUser } from '@/components/ui/icons'
-import { ChatMessageActions } from '@/components/chat-message-actions'
+// Add this utility function to parse JSON messages
+function parseMessageContent(content: string): string {
+  try {
+    const parsed = JSON.parse(content)
+    if (parsed && typeof parsed.text === 'string') {
+      return parsed.text
+    }
+  } catch (e) {
+    // If parsing fails, return the original content
+  }
+  return content
+}
 
 export interface ChatMessageProps {
   message: Message
@@ -68,7 +81,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             }
           }}
         >
-          {message.content}
+          {parseMessageContent(message.content)}
         </MemoizedReactMarkdown>
         <ChatMessageActions message={message} />
       </div>
