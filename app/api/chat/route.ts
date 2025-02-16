@@ -1,9 +1,10 @@
 import 'server-only'
-import { StreamingTextResponse } from 'ai'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+
 import { Database } from '@/lib/db_types'
+import { StreamingTextResponse } from 'ai'
 import { auth } from '@/auth'
+import { cookies } from 'next/headers'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
@@ -21,9 +22,6 @@ export async function POST(req: Request) {
     if (!userId) {
       return new Response('Unauthorized', { status: 401 })
     }
-
-    // Use the last message as the prompt.
-    const prompt = messages[messages.length - 1].content
 
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for car insurance via EigenLayer and Metamask. Introduce yourself and guide users.
     Flows:
@@ -43,16 +41,19 @@ export async function POST(req: Request) {
     - **updateDocument:** Parameters: id (string), description (string)
     `
 
-    // Log the prompt details for debugging.
-    console.log("Sending request to generation API with prompt:", prompt)
+    // Log the messages for debugging
+    console.log("Sending request to generation API with messages:", messages)
 
-    // Call your custom API endpoint.
+    // Update the API call to send the full message history
     const apiResponse = await fetch("http://localhost:8000/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ messages: [prompt], system: regularPrompt }),
+      body: JSON.stringify({ 
+        messages: messages,  // Pass the entire messages array
+        system: regularPrompt 
+      }),
     })
 
     console.log("API response status:", apiResponse.status)
