@@ -24,8 +24,29 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    // Remove single prompt extraction since we'll use full history
-    // const prompt = messages[messages.length - 1].content
+    // Parse the last message content for attachments
+    const lastMessage = messages[messages.length - 1];
+    let prompt = lastMessage.content;
+    let attachments = [];
+    
+    try {
+      const parsed = JSON.parse(lastMessage.content);
+      prompt = parsed.text;
+      attachments = parsed.attachments || [];
+    } catch (e) {
+      // If parsing fails, use content as-is
+    }
+
+    // Add attachments to the prompt
+    const attachmentContext = attachments.map((att: { type: string; name: any; content: any }) => {
+      if (att.type === 'pdf') {
+        return `PDF Content (${att.name}): ${att.content}`;
+      } else if (att.type === 'image') {
+        return `Image (${att.name}): [Base64 image data attached]`;
+      }
+    }).join('\n\n');
+
+    const fullPrompt = attachmentContext ? `${prompt}\n\nContext from attachments:\n${attachmentContext}` : prompt;
 
     const regularPrompt = `You are EigenSurance, an AI-powered insurance assistant for home insurance via EigenLayer and Metamask. Introduce yourself the first time and guide users.
     Flows:
