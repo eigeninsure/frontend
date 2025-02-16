@@ -22,6 +22,8 @@ import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
 import {uploadJsonToPinata} from '@/lib/ipfs'
 
+const AVS_API_ENDPOINT = 'http://10.32.86.7:4000/api/tasks'
+
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -98,16 +100,43 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
 
               window.alert(`Processing home insurance claim for $${amount} with description: ${description}. IPFS ${ipfsHash}`)
 
-              // TODO: Call AVS create task function with amount and description.
+              // Call AVS create task function with IPFS hash
+              try {
+                const taskResponse = await fetch(AVS_API_ENDPOINT, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    taskName: ipfsHash,
+                    voteThreshold: 2
+                  })
+                });
+
+                if (!taskResponse.ok) {
+                  throw new Error(`HTTP error! status: ${taskResponse.status}`);
+                }
+
+                const taskResult = await taskResponse.json();
+                console.log('Task created:', taskResult);
+                window.alert(`Claim task created. Task ID: ${taskResult.taskId}`);
+
+                // TODO: Store taskId for polling
+                // const taskId = taskResult.taskId;
+
+              } catch (error) {
+                console.error('Error creating task:', error);
+                window.alert(`Failed to create claim task: ${error.message}`);
+              }
 
               // TODO: Poll AVS until approval rate is finalized
+              // const taskStatus = await pollTaskStatus(taskId);
 
               // If above threshold, trigger reimbursement
               // reimburse(amount, wallet.address, lastInsuranceId)
               // we need to track lastInsuranceId somehow
 
               // Else, alert() user about denial of claim.
-
             }
           }
         } catch (error) {
